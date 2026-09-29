@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct TreatmentView: View {
+    @Binding var tab: Int
+    @Binding var journalFilter: String
     @Environment(Store.self) private var store
     @State private var editing = false
     @State private var schedule = false
@@ -66,13 +68,26 @@ struct TreatmentView: View {
                         Button { selectedVial = vial } label: { VialSummary(vial: vial) }.buttonStyle(.plain)
                     }
                     if !taken.isEmpty {
-                        VStack(alignment: .leading, spacing: 16) {
-                            HStack { Text("Dose history").font(.headline); Spacer(); Text("\(taken.count)").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary) }
-                            HStack { Text("Taken"); Spacer(); Text("\(number(taken.reduce(0) { $0 + $1.milligrams }, digits: 2)) mg").foregroundStyle(.secondary) }.font(.subheadline)
-                            ForEach(taken.prefix(4)) { dose in
-                                HStack { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green); Text(dose.date, format: .dateTime.month(.abbreviated).day()); Spacer(); Text("\(number(dose.milligrams, digits: 3)) mg").monospacedDigit() }.font(.subheadline)
-                            }
-                        }.card()
+                        Button { journalFilter = "Doses"; tab = 3 } label: {
+                            VStack(alignment: .leading, spacing: 16) {
+                                HStack { Text("Dose history").font(.headline); Spacer(); Text("\(taken.count)").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary) }
+                                HStack { Text("Taken"); Spacer(); Text("\(number(taken.reduce(0) { $0 + $1.milligrams }, digits: 2)) mg").foregroundStyle(.secondary) }.font(.subheadline)
+                                ForEach(taken.prefix(3)) { dose in
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                                        Text(dose.date, format: .dateTime.month(.abbreviated).day())
+                                        (Text("(") + Text(dose.date, format: .dateTime.weekday(.abbreviated)) + Text(")"))
+                                            .foregroundStyle(.secondary)
+                                        Spacer()
+                                        Text("\(number(dose.milligrams, digits: 3)) mg").monospacedDigit()
+                                    }.font(.subheadline)
+                                }
+                                if taken.count > 3 {
+                                    Text("+\(taken.count - 3) more").font(.subheadline).foregroundStyle(.secondary)
+                                }
+                            }.card().contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityIdentifier("doseHistoryCard")
+                            .accessibilityHint("Opens Journal with Doses selected")
                     }
                 }.padding(.horizontal, 16).padding(.bottom, 24)
             }.background(Theme.background).toolbar(.hidden, for: .navigationBar)

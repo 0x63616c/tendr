@@ -222,6 +222,26 @@ final class StillUITests: XCTestCase {
         app.buttons["Home"].tap()
         XCTAssertTrue(app.buttons["logDose"].waitForExistence(timeout: 5))
     }
+    @MainActor func testDoseHistoryCardShowsThreeAndOpensFilteredJournal() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo", "--uitest"]
+        app.launch()
+        app.buttons["Treatment"].tap()
+
+        let card = app.buttons["doseHistoryCard"]
+        for _ in 0..<3 where !card.isHittable { app.swipeUp() }
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        app.swipeUp()
+        XCTAssertEqual(card.staticTexts.matching(identifier: "0.5 mg").count, 3)
+        XCTAssertTrue(card.staticTexts["+5 more"].exists)
+        XCTAssertFalse(card.staticTexts["+5 more mg"].exists)
+        capture("Treatment dose history")
+
+        card.tap()
+        XCTAssertTrue(app.staticTexts["pageHeader-Journal"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Doses"].isSelected)
+        XCTAssertFalse(app.buttons["Weight"].isSelected)
+    }
     @MainActor func testMedicationChartTapAndFutureDrag() {
         let app = XCUIApplication()
         app.launchArguments = ["--demo", "--uitest"]
