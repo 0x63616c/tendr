@@ -13,7 +13,7 @@ struct JournalView: View {
     @State private var dose: DoseEntry?
     @State private var deleting: HistoryEntry?
     @State private var adding: String?
-    @State private var filter = "All"
+    @Binding var filter: String
     private var entries: [HistoryEntry] {
         (store.journal.weights.map(HistoryEntry.weight) + store.journal.doses.map(HistoryEntry.dose))
             .filter { filter == "All" || $0.kind == filter }.sorted { $0.date > $1.date }

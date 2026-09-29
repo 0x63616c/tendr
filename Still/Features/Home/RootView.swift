@@ -5,13 +5,14 @@ struct RootView: View {
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var scenePhase
     @State private var selected = 0
+    @State private var journalFilter = "All"
     var body: some View {
         @Bindable var store = store
         TabView(selection: $selected) {
             TodayView(tab: $selected).tag(0).tabItem { Label("Home", systemImage: "square.grid.2x2.fill").accessibilityIdentifier("navHome") }
-            TreatmentView().tag(1).tabItem { Label("Treatment", systemImage: "syringe.fill").accessibilityIdentifier("navTreatment") }
+            TreatmentView(tab: $selected, journalFilter: $journalFilter).tag(1).tabItem { Label("Treatment", systemImage: "syringe.fill").accessibilityIdentifier("navTreatment") }
             ProgressViewScreen().tag(2).tabItem { Label("Progress", systemImage: "chart.xyaxis.line").accessibilityIdentifier("navProgress") }
-            JournalView().tag(3).tabItem { Label("Journal", systemImage: "book.closed").accessibilityIdentifier("navJournal") }
+            JournalView(filter: $journalFilter).tag(3).tabItem { Label("Journal", systemImage: "book.closed").accessibilityIdentifier("navJournal") }
             SettingsView().tag(4).tabItem { Label("Settings", systemImage: "gearshape").accessibilityIdentifier("navSettings") }
         }
         .alert("Something needs attention", isPresented: Binding(get: { store.error != nil }, set: { if !$0 { store.error = nil } })) {
