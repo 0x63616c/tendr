@@ -14,7 +14,7 @@
 - [x] **Blocker 6:** demo data is now "Weekly medication", plain 0.5 mg doses, a simple half-life model, and no vials, concentration or syringe.
 - [x] First-launch disclaimer (`MedicalDisclaimerGate` in `StillApp.swift`). It shows once and is stored in `@AppStorage`; it's skipped for `--demo` and `--uitest`.
 - [x] "Still backup" → "Tendr backup" (`Tracking.swift`).
-- [x] Dropped `NSHealthUpdateUsageDescription` (the app only reads from Health).
+- [x] ~~Drop `NSHealthUpdateUsageDescription`~~ **Reverted:** App Store Connect rejects an upload without it (409 "Missing purpose string") because of the HealthKit entitlement, even though the app only reads. Keep it.
 - [x] Build number resynced to 17 in `project.yml` and `Still.xcodeproj`.
 - [ ] CSV/JSON export, a better icon, reviewer notes.
 - [ ] Phases 2–5.
@@ -95,7 +95,7 @@ The Settings footer says "Tendr stays up to date in the background when Apple He
 - **CSV/JSON export.** Lets people take their data out, and gives reviewers a good impression.
 - **Better icon.** A flattened version plus dark and tinted variants for iOS 18+, generated from `scripts/render-icon.swift`.
 - **Wording fix.** "This file is not a valid Still backup" should say Tendr (`Still/Core/Tracking.swift` ~98).
-- **Drop the unneeded Health write usage string.** Remove `INFOPLIST_KEY_NSHealthUpdateUsageDescription` from `project.yml`, because the app never writes to Health.
+- ~~**Drop the unneeded Health write usage string.**~~ Not possible: upload validation requires `NSHealthUpdateUsageDescription` for HealthKit apps.
 - **Resync the build number.** `project.yml` says `CURRENT_PROJECT_VERSION: '17'` but `Still.xcodeproj/project.pbxproj` says `12`. CI allocates the build number from TestFlight anyway, but the two files should agree.
 - **Reviewer notes.** Explain that there is no login, that data stays on the device, what HealthKit is used for, and how to see sample data.
 
