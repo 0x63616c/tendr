@@ -4,26 +4,27 @@
 // medication card.
 //
 //   swiftc -parse-as-library scripts/frame-screenshots.swift -o build/frame-screenshots
-//   build/frame-screenshots build/screenshots/raw/light fastlane/screenshots/en-US build/screenshots/overview.png
+//   build/frame-screenshots build/screenshots/raw fastlane/screenshots/en-US build/screenshots/overview.png
 import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
 struct Shot {
     let screen: String
+    var appearance = "light"
     let eyebrow: String
     let headline: String
     let subtitle: String
 }
 
-/// Order is the App Store order; the first three carry the listing.
+/// Order is the App Store order; the first three carry the listing. Subtitles break by hand so lines balance.
 let shots = [
-    Shot(screen: "home", eyebrow: "Dose & weight journal", headline: "A calm journal\nfor your treatment.", subtitle: "Doses, weight and progress together, kept privately on your iPhone."),
-    Shot(screen: "progress", eyebrow: "Progress", headline: "See how far\nyou've come.", subtitle: "Your weight trend, goal and weekly change, drawn from your own entries."),
-    Shot(screen: "log-dose", eyebrow: "Logging", headline: "Log a dose\nin seconds.", subtitle: "The amount in mg, the time and an optional note. Nothing more."),
-    Shot(screen: "medication", eyebrow: "Estimates", headline: "Every dose,\nin context.", subtitle: "A simple estimate drawn from the doses you log. Not a measured level."),
-    Shot(screen: "journal", eyebrow: "Journal", headline: "Your history,\nday by day.", subtitle: "Doses and weigh-ins in one tidy timeline that is easy to edit."),
-    Shot(screen: "settings", eyebrow: "Privacy", headline: "Private\nby design.", subtitle: "No account and no servers. Apple Health weight is read-only."),
+    Shot(screen: "home", eyebrow: "Dose & weight journal", headline: "A calm journal\nfor your treatment.", subtitle: "Doses, weight and progress together,\nkept privately on your iPhone."),
+    Shot(screen: "progress", eyebrow: "Progress", headline: "See how far\nyou've come.", subtitle: "Your weight trend, goal and weekly\nchange, drawn from your own entries."),
+    Shot(screen: "log-dose", eyebrow: "Logging", headline: "Log a dose\nin seconds.", subtitle: "The amount in mg, the time and\nan optional note. Nothing more."),
+    Shot(screen: "journal", eyebrow: "Journal", headline: "Your history,\nday by day.", subtitle: "Every dose and weigh-in in one tidy\ntimeline that is easy to edit."),
+    Shot(screen: "settings", eyebrow: "Privacy", headline: "Private\nby design.", subtitle: "No account and no servers.\nApple Health weight is read-only."),
+    Shot(screen: "home", appearance: "dark", eyebrow: "Light & dark", headline: "Easy on the eyes,\nday or night.", subtitle: "Tendr follows your iPhone's light\nor dark appearance."),
 ]
 
 let canvas = CGSize(width: 1320, height: 2868)
@@ -40,8 +41,8 @@ struct Backdrop: View {
     var body: some View {
         ZStack {
             Palette.ink
-            RadialGradient(colors: [Palette.aqua.opacity(0.55), Palette.aqua.opacity(0)], center: UnitPoint(x: 0.5, y: 0.78), startRadius: 0, endRadius: 1050)
-            RadialGradient(colors: [Color.white.opacity(0.07), .clear], center: UnitPoint(x: 0.5, y: 0), startRadius: 0, endRadius: 900)
+            RadialGradient(colors: [Palette.aqua.opacity(0.85), Palette.aqua.opacity(0.25), .clear], center: UnitPoint(x: 0.5, y: 0.62), startRadius: 0, endRadius: 1250)
+            RadialGradient(colors: [Palette.mint.opacity(0.10), .clear], center: UnitPoint(x: 0.5, y: 0.02), startRadius: 0, endRadius: 820)
         }
     }
 }
@@ -115,9 +116,8 @@ struct Frame: View {
                     .foregroundStyle(Palette.muted)
                     .frame(maxWidth: 1060)
                     .padding(.top, 34)
-                Spacer(minLength: 0)
-                Device(screen: screen, width: 930)
-                    .padding(.bottom, 92)
+                Device(screen: screen, width: 1100)
+                    .padding(.top, 84)
             }
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
@@ -125,6 +125,7 @@ struct Frame: View {
             .frame(width: canvas.width, height: canvas.height, alignment: .top)
         }
         .frame(width: canvas.width, height: canvas.height)
+        .clipped()
     }
 }
 
@@ -163,7 +164,7 @@ struct Overview: View {
 @main struct FrameScreenshots {
     @MainActor static func main() throws {
         let arguments = CommandLine.arguments.dropFirst()
-        let raw = URL(fileURLWithPath: arguments.first ?? "build/screenshots/raw/light")
+        let raw = URL(fileURLWithPath: arguments.first ?? "build/screenshots/raw")
         let output = URL(fileURLWithPath: arguments.dropFirst().first ?? "fastlane/screenshots/en-US")
         let overview = arguments.dropFirst(2).first.map { URL(fileURLWithPath: $0) }
         let files = FileManager.default
@@ -173,9 +174,10 @@ struct Overview: View {
         }
         var framed: [NSImage] = []
         for (index, shot) in shots.enumerated() {
-            let source = raw.appendingPathComponent("\(shot.screen).png")
+            let source = raw.appendingPathComponent(shot.appearance).appendingPathComponent("\(shot.screen).png")
             guard let screen = NSImage(contentsOf: source) else { throw CocoaError(.fileReadNoSuchFile, userInfo: [NSFilePathErrorKey: source.path]) }
-            let destination = output.appendingPathComponent(String(format: "%02d-%@.png", index + 1, shot.screen))
+            let name = shot.appearance == "light" ? shot.screen : "\(shot.screen)-\(shot.appearance)"
+            let destination = output.appendingPathComponent(String(format: "%02d-%@.png", index + 1, name))
             try render(Frame(shot: shot, screen: screen), size: canvas, to: destination)
             framed.append(NSImage(contentsOf: destination)!)
             print("Framed \(destination.path)")

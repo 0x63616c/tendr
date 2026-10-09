@@ -36,7 +36,7 @@ for appearance in "${appearances[@]}"; do
   xcrun simctl status_bar "$udid" override --time "9:41" \
     --dataNetwork wifi --wifiMode active --wifiBars 3 \
     --cellularMode active --cellularBars 4 --operatorName "" \
-    --batteryState charged --batteryLevel 100
+    --batteryState discharging --batteryLevel 100
   mkdir -p "$out/$appearance"
   TEST_RUNNER_SCREENSHOT_DIR="$PWD/$out/$appearance" xcodebuild test-without-building \
     -project Still.xcodeproj -scheme Still -destination "id=$udid" -derivedDataPath "$derived" \

@@ -20,17 +20,6 @@ final class ScreenshotTests: XCTestCase {
         snap("log-dose")
         app.buttons["Cancel"].tap()
 
-        let medication = app.descendants(matching: .any)["medicationCard"].firstMatch
-        XCTAssertTrue(medication.waitForExistence(timeout: 5))
-        medication.tap()
-        XCTAssertTrue(app.descendants(matching: .any)["medicationDetailChart"].waitForExistence(timeout: 5))
-        snap("medication")
-        app.navigationBars.buttons.element(boundBy: 0).tap()
-
-        app.buttons["Treatment"].tap()
-        XCTAssertTrue(app.staticTexts["pageHeader-Treatment"].waitForExistence(timeout: 5))
-        snap("treatment")
-
         app.buttons["Progress"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["currentWeightCard"].waitForExistence(timeout: 5))
         snap("progress")

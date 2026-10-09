@@ -34,7 +34,7 @@ jobs:
       - name: Render App Store frames
         run: |
           swiftc -O -parse-as-library scripts/frame-screenshots.swift -o build/frame-screenshots
-          build/frame-screenshots build/screenshots/raw/light fastlane/screenshots/en-US build/screenshots/overview.png
+          build/frame-screenshots build/screenshots/raw fastlane/screenshots/en-US build/screenshots/overview.png
       - name: Check App Store dimensions
         run: |
           python3 - <<'PY'

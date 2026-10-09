@@ -28,15 +28,16 @@ extension Store {
         journal.schedule.startDate = cal.startOfDay(for: firstDose)
         journal.schedule.enabled = true
 
-        // 217 lbs easing toward 199 lbs with day-to-day noise, weighed every three days from the first dose.
+        // 217 lbs easing to 199 lbs with day-to-day noise, weighed every three days after the first dose
+        // and ending yesterday, so no entry is in the future whatever time the capture runs.
         let pounds = 2.2046226218
-        let span = cal.dateComponents([.day], from: cal.startOfDay(for: firstDose), to: today).day!
-        journal.weights = stride(from: 0, through: span, by: 3).map { elapsed in
+        let span = cal.dateComponents([.day], from: cal.startOfDay(for: firstDose), to: today).day! - 1
+        journal.weights = stride(from: span, through: 0, by: -3).reversed().map { elapsed in
             let progress = Double(elapsed) / Double(span)
             let trend = 217 - 18 * (1 - pow(1 - progress, 1.6))
             let noise = 0.7 * sin(Double(elapsed) * 1.7) + 0.35 * cos(Double(elapsed) * 0.9)
-            let lbs = elapsed == span ? 199.0 : (trend + noise * (1 - progress * 0.5)).rounded(toPlaces: 1)
-            return WeightEntry(date: day(elapsed - span, hour: 7, minute: 15), kilograms: lbs / pounds, note: elapsed == span ? "Lowest yet. Jeans fit better." : "")
+            let lbs = elapsed == 0 ? 217.0 : elapsed == span ? 199.0 : (trend + noise * (1 - progress)).rounded(toPlaces: 1)
+            return WeightEntry(date: day(elapsed - span - 1, hour: 9, minute: 10), kilograms: lbs / pounds, note: elapsed == span ? "Lowest yet. Jeans fit better." : "")
         }
         journal.goal = WeightGoal(kilograms: 185 / pounds, date: cal.date(byAdding: .day, value: 90, to: today))
         journal.weightsStartAtFirstDose = true
