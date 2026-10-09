@@ -13,9 +13,9 @@ final class AppStoreScreenshots: XCTestCase {
 
         light.tabBars.buttons["Progress"].tap()
         XCTAssertTrue(light.staticTexts["pageHeader-Progress"].waitForExistence(timeout: 5))
-        // Lift the weight chart clear of the tab bar.
-        let top = light.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.72))
-        top.press(forDuration: 0.1, thenDragTo: light.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.58)), withVelocity: .slow, thenHoldForDuration: 0.4)
+        // Lift the weight chart clear of the tab bar; drags that start on the chart select points instead.
+        let top = light.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.42))
+        top.press(forDuration: 0.1, thenDragTo: light.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.28)), withVelocity: .slow, thenHoldForDuration: 0.4)
         try capture("02-progress")
 
         light.tabBars.buttons["Journal"].tap()
