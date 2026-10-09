@@ -119,6 +119,18 @@ private_lane :attach_build do |options|
   build.version
 end
 
+# deliver always syncs review attachments, which raises "No data" on a first version that has no
+# App Review details yet (fastlane#20538). Skip only that case.
+module TendrMissingReviewDetailGuard
+  def review_attachment_file(version)
+    super
+  rescue RuntimeError => error
+    raise unless error.message == "No data"
+    UI.important("No App Review details on this version yet; skipping review attachments")
+  end
+end
+Deliver::UploadMetadata.prepend(TendrMissingReviewDetailGuard) if defined?(Deliver::UploadMetadata)
+
 platform :ios do
   desc "Upload the App Store listing and screenshots, set Free pricing, and attach the latest processed build. Never submits for review."
   lane :metadata do |options|
