@@ -10,6 +10,8 @@ settings:
     MARKETING_VERSION: '1.0.0'
     CURRENT_PROJECT_VERSION: '17'
     ENABLE_USER_SCRIPT_SANDBOXING: YES
+fileGroups:
+  - Tendr.storekit
 targets:
   Still:
     type: application
@@ -44,5 +46,7 @@ schemes:
       targets:
         Still: all
         StillUITests: [test]
+    run:
+      storeKitConfiguration: Tendr.storekit
     test:
       targets: [StillUITests]
