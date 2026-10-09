@@ -123,11 +123,6 @@ struct Frame: View {
             .fixedSize(horizontal: false, vertical: true)
             .padding(.top, 148)
             .frame(width: canvas.width, height: canvas.height, alignment: .top)
-            // The device runs off the bottom edge; fade it into the backdrop so the crop reads as intentional.
-            LinearGradient(colors: [Palette.ink.opacity(0), Palette.ink.opacity(0.92)], startPoint: .top, endPoint: .bottom)
-                .frame(height: 320)
-                .frame(maxHeight: .infinity, alignment: .bottom)
-                .allowsHitTesting(false)
         }
         .frame(width: canvas.width, height: canvas.height)
         .clipped()
