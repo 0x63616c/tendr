@@ -37,7 +37,7 @@ extension Store {
         journal.schedule.minute = 30
         journal.schedule.enabled = true
 
-        // Morning weigh-ins every two or three days, easing down with day-to-day noise.
+        // Morning weigh-ins twice a week, easing down with day-to-day noise.
         let startPounds = 212.4
         let totalLoss = 16.2
         let noise: [Double] = [0, 0.4, -0.3, 0.2, -0.5, 0.3, 0.1, -0.2, 0.5, -0.1, 0.2, -0.4, 0.3, 0, -0.3, 0.4, -0.2, 0.1, 0.3, -0.1, 0.2, -0.3, 0.1, 0, 0.2, -0.2, 0.1, 0]
@@ -48,7 +48,7 @@ extension Store {
             let progress = Double(offset - firstDose) / Double(-firstDose)
             let pounds = startPounds - totalLoss * (1 - exp(-2.2 * progress)) / (1 - exp(-2.2)) + noise[index % noise.count]
             weights.append(WeightEntry(date: day(offset, hour: 7, minute: 15), kilograms: (pounds * 10).rounded() / 10 / 2.2046226218))
-            offset += index % 3 == 2 ? 3 : 2
+            offset += index % 2 == 0 ? 3 : 4
             index += 1
         }
         if let last = weights.indices.last { weights[last].note = "Feeling more like myself. A long walk this morning." }

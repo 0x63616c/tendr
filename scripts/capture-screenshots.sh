@@ -20,7 +20,7 @@ xcrun simctl bootstatus "$udid" -b >/dev/null
 xcrun simctl status_bar "$udid" override \
   --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
   --cellularMode active --cellularBars 4 --operatorName "" \
-  --batteryState charged --batteryLevel 100
+  --batteryState discharging --batteryLevel 100
 
 TEST_RUNNER_SCREENSHOTS_DIR="$out" xcodebuild test \
   -project Still.xcodeproj -scheme Still \
