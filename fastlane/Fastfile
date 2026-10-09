@@ -135,6 +135,7 @@ platform :ios do
       email_address: ENV["ASC_REVIEW_EMAIL"]
     }.reject { |_, value| value.to_s.empty? }
 
+    guard_first_review_detail
     deliver(
       api_key: options[:api_key] || connect_api_key,
       app_identifier: APP_IDENTIFIER,
@@ -263,6 +264,37 @@ platform :ios do
     select_build(version: options[:version])
     review_status
   end
+end
+
+# Apple only creates App Review details with a contact phone, and deliver 2.239 then assumes they
+# exist. Until a phone is known (ASC_REVIEW_PHONE or entered in App Store Connect), skip them and
+# let the rest of the listing upload.
+module TendrFirstReviewDetail
+  def review_information(version)
+    existing = begin
+      version.fetch_app_store_review_detail
+    rescue StandardError
+      nil
+    end
+    if existing.nil? && options[:app_review_information].to_h.transform_keys(&:to_sym)[:phone_number].to_s.strip.empty?
+      FastlaneCore::UI.important("Skipping App Review details: Apple needs a contact phone first. Set the ASC_REVIEW_PHONE secret or add it in App Store Connect, then rerun.")
+      return
+    end
+    super
+  end
+
+  def review_attachment_file(version)
+    super
+  rescue RuntimeError => error
+    raise unless error.message == "No data"
+  end
+end
+
+def guard_first_review_detail
+  require "deliver"
+  Deliver::UploadMetadata.prepend(TendrFirstReviewDetail) unless Deliver::UploadMetadata < TendrFirstReviewDetail
+rescue LoadError
+  nil
 end
 
 def app_store_app
