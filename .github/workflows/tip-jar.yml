@@ -40,7 +40,10 @@ jobs:
             mkdir -p "build/tip-jar/$appearance"
             TEST_RUNNER_SCREENSHOT_DIR="$PWD/build/tip-jar/$appearance" xcodebuild test-without-building \
               -project Still.xcodeproj -scheme Still -destination "id=$UDID" -derivedDataPath build/DerivedData \
-              -only-testing:StillUITests/TipJarTests -resultBundlePath "build/tip-jar/TipJarTests-$appearance.xcresult" -quiet
+              -only-testing:StillUITests/TipJarTests -resultBundlePath "build/tip-jar/TipJarTests-$appearance.xcresult" 2>&1 \
+              | grep -E "Test Case|error:|failed|TEST (SUCC|FAIL)" || true
+            xcrun xcresulttool get test-results summary --path "build/tip-jar/TipJarTests-$appearance.xcresult" --compact \
+              | python3 -c 'import json,sys; s=json.load(sys.stdin); print(s.get("result"), s.get("passedTests"), "passed", s.get("failedTests"), "failed"); [print(f.get("testName"), "-", f.get("failureText")) for f in s.get("testFailures", [])]; sys.exit(0 if s.get("result")=="Passed" else 1)'
           done
       - name: Record a purchase (dark)
         run: |
