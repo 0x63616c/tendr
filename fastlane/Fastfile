@@ -179,7 +179,7 @@ platform :ios do
     asc = Spaceship::ConnectAPI.client.tunes_request_client
     schedule = begin
       asc.get("v1/apps/#{app.id}/appPriceSchedule").body["data"]
-    rescue Spaceship::UnexpectedResponse
+    rescue StandardError
       nil
     end
     if schedule
@@ -227,7 +227,7 @@ platform :ios do
     sets = localization ? localization.get_app_screenshot_sets : []
     review = begin
       app_store_version.fetch_app_store_review_detail
-    rescue Spaceship::UnexpectedResponse
+    rescue StandardError
       nil
     end
     info = app.fetch_edit_app_info || app.fetch_latest_app_info
@@ -255,7 +255,11 @@ platform :ios do
   lane :prepare_review do |options|
     api_key = connect_api_key
     metadata(api_key: api_key, version: options[:version], skip_screenshots: options[:skip_screenshots])
-    ensure_free_pricing
+    begin
+      ensure_free_pricing
+    rescue StandardError => error
+      UI.important("Could not set Free pricing (#{error.message}). Set it under Pricing and Availability in App Store Connect.")
+    end
     select_build(version: options[:version])
     review_status
   end
