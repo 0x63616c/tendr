@@ -26,6 +26,9 @@ final class ScreenshotTests: XCTestCase {
 
         app.buttons["Journal"].tap()
         XCTAssertTrue(app.staticTexts["pageHeader-Journal"].waitForExistence(timeout: 5))
+        // Daily weigh-ins would push every dose off screen; show the titration instead.
+        app.buttons["Doses"].tap()
+        XCTAssertTrue(app.staticTexts["7.5 mg · Weekly medication"].firstMatch.waitForExistence(timeout: 5))
         snap("journal")
 
         app.buttons["Settings"].tap()

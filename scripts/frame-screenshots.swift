@@ -23,7 +23,7 @@ let shots = [
     Shot(screen: "home", appearance: "dark", eyebrow: "Dose & weight journal", headline: "A calm journal\nfor your treatment.", subtitle: "Doses, weight and progress together,\nkept privately on your iPhone."),
     Shot(screen: "progress", appearance: "dark", eyebrow: "Progress", headline: "See how far\nyou've come.", subtitle: "Your weight trend, goal and weekly\nchange, drawn from your own entries."),
     Shot(screen: "log-dose", appearance: "dark", eyebrow: "Logging", headline: "Log a dose\nin seconds.", subtitle: "The amount in mg, the time and\nan optional note. Nothing more."),
-    Shot(screen: "journal", appearance: "dark", eyebrow: "Journal", headline: "Your history,\nday by day.", subtitle: "Every dose and weigh-in in one tidy\ntimeline that is easy to edit."),
+    Shot(screen: "journal", appearance: "dark", eyebrow: "Journal", headline: "Your history,\nday by day.", subtitle: "Every dose and weigh-in in one tidy\ntimeline, filtered in a tap."),
     Shot(screen: "settings", appearance: "dark", eyebrow: "Privacy", headline: "Private\nby design.", subtitle: "No account and no servers.\nApple Health weight is read-only."),
     Shot(screen: "home", eyebrow: "Light & dark", headline: "Easy on the eyes,\nday or night.", subtitle: "Tendr follows your iPhone's light\nor dark appearance."),
 ]
