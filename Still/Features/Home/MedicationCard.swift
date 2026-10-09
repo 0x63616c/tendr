@@ -19,7 +19,7 @@ struct MedicationCard: View {
             HStack {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(store.journal.medication.uppercased()).font(.system(size: 10, weight: .bold)).tracking(1.6).foregroundStyle(Theme.pine)
-                    Text("Medication level").font(.headline)
+                    Text("Estimated level").font(.headline)
                 }
                 Spacer()
                 Button { info = true } label: { Image(systemName: "info.circle").foregroundStyle(.secondary) }.accessibilityLabel("About medication estimates")
@@ -31,7 +31,7 @@ struct MedicationCard: View {
                 let reference = max(value, plot.referenceDose * 0.1)
                 let trend = MedicationLevel.trend(rate: slope, reference: reference)
                 HStack(alignment: .firstTextBaseline, spacing: 5) {
-                    Text(value.formatted(.number.precision(.fractionLength(7)))).font(.system(size: 38, weight: .semibold, design: .rounded)).monospacedDigit().accessibilityIdentifier("liveMedicationAmount").minimumScaleFactor(0.6).lineLimit(1)
+                    Text(value.formatted(.number.precision(.fractionLength(2)))).font(.system(size: 38, weight: .semibold, design: .rounded)).monospacedDigit().accessibilityIdentifier("liveMedicationAmount").minimumScaleFactor(0.6).lineLimit(1)
                     Text("mg").font(.headline).foregroundStyle(.secondary)
                     if trend != 0 {
                         HStack(spacing: 1) {
@@ -39,7 +39,7 @@ struct MedicationCard: View {
                                 Image(systemName: trend > 0 ? "arrow.up" : "arrow.down")
                             }
                         }.font(.caption.bold()).foregroundStyle(.secondary)
-                            .accessibilityLabel("Medication level " + (abs(trend) == 2 ? "quickly " : "") + (trend > 0 ? "rising" : "falling"))
+                            .accessibilityLabel("Estimated level " + (abs(trend) == 2 ? "quickly " : "") + (trend > 0 ? "rising" : "falling"))
                             .accessibilityIdentifier("medicationTrendIndicator")
                     }
                     Spacer()
@@ -49,6 +49,7 @@ struct MedicationCard: View {
                 }
             }
             graph(plot)
+            Text("Estimate from your logged doses, not a measured level or medical advice.").font(.caption2).foregroundStyle(.secondary).accessibilityIdentifier("estimateDisclaimer")
         }.card().contentShape(Rectangle())
         Group {
             if expanded { content }
@@ -77,7 +78,7 @@ struct MedicationCard: View {
                 List {
                     Section("An estimate, not a measurement") {
                         Text("This graph estimates absorbed medication remaining from your recorded doses. It is not a measured blood level or the exact amount in your body.")
-                        Text("Injection models include gradual absorption, distribution and clearance using published reference parameters. They are not personalised to your body or vial formulation. Extra decimal places do not add medical accuracy. Do not use the graph to choose or change a dose.")
+                        Text("Injection models include gradual absorption, distribution and clearance using published reference parameters. They are not personalised to your body or formulation. Values are rounded because the estimate is approximate. This is not medical advice: do not use the graph to choose or change a dose.")
                     }
                     Section("Projection") { Text("The dashed line includes future doses you explicitly entered and, when you have a schedule, the dates it implies. Scheduled doses are drawn at the average of your last three recorded doses, are never counted as already taken, and are not added to your journal. Log each dose as you take it.") }
                     Section("Model") {

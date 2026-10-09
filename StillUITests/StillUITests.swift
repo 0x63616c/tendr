@@ -73,58 +73,33 @@ final class StillUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Year"].isSelected)
         capture("Polish Progress")
     }
-    @MainActor func testLivePrecisionIsAlwaysSevenDecimals() {
+    @MainActor func testEstimatedLevelIsRoundedAndLabelled() {
         let app = XCUIApplication()
         app.launchArguments = ["--uitest", "--reset-test-journal"]
         app.launch()
-        XCTAssertEqual(app.staticTexts["liveMedicationAmount"].label, "0.0000000")
+        XCTAssertEqual(app.staticTexts["liveMedicationAmount"].label, "0.00")
+        XCTAssertTrue(app.staticTexts["Estimated level"].exists)
+        XCTAssertFalse(app.staticTexts["Medication level"].exists)
+        XCTAssertTrue(app.staticTexts["estimateDisclaimer"].exists)
         app.terminate()
         app.launchArguments = ["--uitest"]
         app.launch()
-        XCTAssertEqual(app.staticTexts["liveMedicationAmount"].label, "0.0000000")
+        XCTAssertEqual(app.staticTexts["liveMedicationAmount"].label, "0.00")
     }
-    @MainActor func testDosePreferencesSurviveRelaunch() {
-        let app = XCUIApplication()
-        app.launchArguments = ["--uitest", "--reset-test-journal"]
-        app.launch()
-        app.buttons["Settings"].tap()
-        app.buttons["Dose entry"].tap()
-        app.segmentedControls.buttons["Units"].tap()
-        app.switches["I use a U-100 syringe"].tap()
-        app.buttons["Save"].tap()
-        app.terminate()
-        app.launchArguments = ["--uitest"]
-        app.launch()
-        app.buttons["logDose"].tap()
-        XCTAssertTrue(app.segmentedControls.buttons["Units"].isSelected)
-        XCTAssertFalse(app.switches["My syringe is U-100"].exists)
-        XCTAssertFalse(app.staticTexts["U-100 · 100 units = 1 mL"].exists)
-        app.segmentedControls.buttons["mg"].tap()
-        app.textFields["doseAmount"].tap()
-        app.textFields["doseAmount"].typeText("0.15")
-        app.buttons["saveDose"].tap()
-        XCTAssertTrue(app.buttons["logDose"].waitForExistence(timeout: 3))
-        app.buttons["logDose"].tap()
-        XCTAssertTrue(app.segmentedControls.buttons["mg"].isSelected)
-    }
-    @MainActor func testChangingDoseUnitsPreservesTheDose() {
+    @MainActor func testDoseEntryIsMilligramsOnly() {
         let app = XCUIApplication()
         app.launchArguments = ["--demo", "--uitest"]
         app.launch()
         app.buttons["logDose"].tap()
         let field = app.textFields["doseAmount"]
         XCTAssertTrue(field.waitForExistence(timeout: 5))
-        field.tap()
-        field.typeText("3")
-        XCTAssertFalse(app.buttons["doseStatus"].exists)
-        XCTAssertFalse(app.buttons["Planned"].exists)
-        XCTAssertFalse(app.buttons["Skipped"].exists)
-        app.segmentedControls.buttons["mg"].tap()
-        XCTAssertEqual(field.value as? String, "0.15")
-        app.segmentedControls.buttons["mL"].tap()
-        XCTAssertEqual(field.value as? String, "0.03")
-        app.segmentedControls.buttons["Units"].tap()
-        XCTAssertEqual(field.value as? String, "3")
+        XCTAssertFalse(app.segmentedControls.buttons["Units"].exists)
+        XCTAssertFalse(app.segmentedControls.buttons["mL"].exists)
+        XCTAssertTrue(app.staticTexts["mg"].exists)
+        app.buttons["Cancel"].tap()
+        app.buttons["Settings"].tap()
+        XCTAssertFalse(app.buttons["Dose entry"].exists)
+        XCTAssertFalse(app.staticTexts["A space to talk"].exists)
     }
     @MainActor func testReopeningKilogramWeightDoesNotConvertItAgain() {
         let app = XCUIApplication()
@@ -357,15 +332,15 @@ final class StillUITests: XCTestCase {
         app.buttons["logDose"].tap()
         XCTAssertTrue(app.textFields["doseAmount"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["Add a vial"].exists)
-        XCTAssertFalse(app.staticTexts["Semaglutide"].exists)
+        XCTAssertFalse(app.staticTexts["Weekly medication"].exists)
         capture("New dose")
         app.buttons["Cancel"].tap()
 
         app.buttons["Journal"].tap()
-        let record = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Semaglutide'")).firstMatch
+        let record = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Weekly medication'")).firstMatch
         XCTAssertTrue(record.waitForExistence(timeout: 5))
         record.tap()
-        XCTAssertTrue(app.staticTexts["Semaglutide"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Weekly medication"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["Add a vial"].exists)
         capture("Edit dose")
     }
