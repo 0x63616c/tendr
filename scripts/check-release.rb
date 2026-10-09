@@ -10,6 +10,10 @@ module UI
   def self.user_error!(message)
     raise message
   end
+
+  def self.important(*); end
+  def self.message(*); end
+  def self.success(*); end
 end
 
 class ReleaseCheck
@@ -18,7 +22,8 @@ class ReleaseCheck
 
   def initialize
     @calls = []
-    instance_eval(File.read(File.expand_path("../fastlane/Fastfile", __dir__)))
+    fastfile = File.expand_path("../fastlane/Fastfile", __dir__)
+    instance_eval(File.read(fastfile), fastfile)
   end
 
   def default_platform(*); end
@@ -57,6 +62,20 @@ class ReleaseCheck
 
   def upload_to_testflight(**args)
     @calls << [:upload, args]
+  end
+
+  def deliver(**args)
+    @calls << [:deliver, args]
+  end
+end
+
+module Spaceship
+  module ConnectAPI
+    App = Struct.new(:id) do
+      def self.find(bundle_id)
+        new("app-for-#{bundle_id}")
+      end
+    end
   end
 end
 
@@ -103,4 +122,41 @@ rescue RuntimeError => error
   raise unless error.message == "test failure"
 end
 raise "released after failing tests" unless check.calls.map(&:first) == [:sh]
-puts "Release checks passed (local signing, CI signing, next build, distribution, failure gates)."
+
+# App Store listing: upload metadata, price, attach a build, and never submit.
+check.calls.clear
+check.define_singleton_method(:ensure_free_pricing) { |options| @calls << [:pricing, options] }
+check.define_singleton_method(:attach_latest_build) { |options| @calls << [:attach, options] }
+if Dir[File.expand_path("../fastlane/screenshots/en-US/*.png", __dir__)].empty?
+  begin
+    check.metadata({})
+    raise "metadata ran without screenshots"
+  rescue RuntimeError => error
+    raise unless error.message.start_with?("No screenshots")
+  end
+  raise "uploaded without screenshots" if check.calls.assoc(:deliver)
+end
+check.calls.clear
+check.metadata({ skip_screenshots: true, build: "42" })
+raise "metadata order" unless check.calls.map(&:first) == [:deliver, :pricing, :attach]
+listing = check.calls.assoc(:deliver).last
+raise "metadata must never submit" unless listing[:submit_for_review] == false && listing[:skip_binary_upload] && listing[:force] && listing[:automatic_release] == false
+raise "metadata version" unless listing[:app_version] == "1.0.0" && listing[:app_identifier] == "com.calumwebb.still"
+raise "attach build" unless check.calls.assoc(:attach).last[:build] == "42" && check.calls.assoc(:attach).last[:version] == "1.0.0"
+
+# Listing limits App Store Connect enforces.
+metadata = File.expand_path("../fastlane/metadata", __dir__)
+limits = { "name" => 30, "subtitle" => 30, "keywords" => 100, "promotional_text" => 170, "description" => 4000, "release_notes" => 4000 }
+limits.each do |field, limit|
+  text = File.read(File.join(metadata, "en-US", "#{field}.txt")).strip
+  raise "#{field} is empty" if text.empty?
+  raise "#{field} is #{text.length} characters (limit #{limit})" if text.length > limit
+end
+raise "keywords must be comma separated without spaces" if File.read(File.join(metadata, "en-US", "keywords.txt")).strip.match?(/,\s/)
+listing_text = Dir[File.join(metadata, "**", "*.txt")].map { |path| File.read(path) }.join("\n")
+banned = /ozempic|wegovy|mounjaro|zepbound|semaglutide|tirzepatide|glp-?1|dosage calculator|cure|treats? obesity/i
+raise "listing mentions #{listing_text[banned]}" if listing_text.match?(banned)
+%w[privacy_url support_url].each do |field|
+  raise "#{field} must be https" unless File.read(File.join(metadata, "en-US", "#{field}.txt")).strip.start_with?("https://")
+end
+puts "Release checks passed (local signing, CI signing, next build, distribution, failure gates, App Store listing)."

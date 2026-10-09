@@ -1,0 +1,1 @@
+medication,injection,shot,tracker,reminder,schedule,diary,health,goal,trend,weekly,body,scale,loss

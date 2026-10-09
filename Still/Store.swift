@@ -18,13 +18,13 @@ import SwiftUI
         return analyticsWeights.filter { $0.date >= firstDoseDate }
     }
     init() {
-        demo = ProcessInfo.processInfo.arguments.contains("--demo")
+        demo = ProcessInfo.processInfo.arguments.contains("--demo") || Self.screenshotRun
         let root = URL.applicationSupportDirectory.appendingPathComponent("Still", isDirectory: true)
         file = JournalFile(url: root.appendingPathComponent(ProcessInfo.processInfo.arguments.contains("--uitest") ? "test.json" : "journal.json"))
         if ProcessInfo.processInfo.arguments.contains("--uitest"), ProcessInfo.processInfo.arguments.contains("--reset-test-journal") {
             try? FileManager.default.removeItem(at: file.url)
         }
-        if demo { journal = Self.demoJournal() }
+        if demo { journal = Self.screenshotRun ? Self.screenshotJournal() : Self.demoJournal() }
         else {
             do { journal = try file.load() } catch { canWrite = false; self.error = "Your journal could not be opened. Please keep the app installed to preserve your data. \(error.localizedDescription)" }
         }

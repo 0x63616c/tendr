@@ -1,0 +1,1 @@
+Welcome to Tendr 1.0, a private journal for your doses and weight. Log doses in mg, track weigh-ins and a goal, and set optional reminders for your schedule.

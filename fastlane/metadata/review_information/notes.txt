@@ -1,0 +1,13 @@
+Tendr is a personal journal for recording medication doses (in mg) and body weight. There is no login, account or server: all data is stored locally on the device and nothing is transmitted.
+
+How to review
+1. On first launch, read the "A journal, not medical advice" notice and tap "I understand".
+2. On Home, tap "Log dose" to record a dose in mg. On Progress, add a weight and set a goal. Every entry appears in the Journal tab.
+3. Settings > Connect Apple Health requests read-only access to body weight. Tendr never writes to Apple Health and uses the weight only to show progress inside the app. Apple Health is optional; every feature works with manual entries.
+4. Treatment > Your schedule sets dose days. Reminders are optional local notifications.
+
+Medical context
+Tendr is a record-keeping tool, not a dosing calculator. It never recommends a dose or a change to treatment. The "Estimated level" card is a simplified half-life curve drawn from the user's own logged doses. The app labels it as an estimate, not a measured level and not medical advice, and tells users to follow their prescriber. No drug brands are named and no medical claims are made.
+
+Privacy
+No analytics, advertising or third-party SDKs. App Privacy: Data Not Collected. Privacy policy: https://0x63616c.github.io/tendr/privacy/

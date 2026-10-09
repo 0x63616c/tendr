@@ -1,0 +1,29 @@
+Tendr is a calm, private journal for people who follow a regular medication schedule. Record the doses you take, log your weight, and see how things are going, all on your iPhone and with no account.
+
+LOG DOSES IN SECONDS
+• Record each dose in mg, with the date, time and an optional note.
+• Edit or delete past entries at any time.
+• Set a weekly, every-few-days or custom schedule, with optional reminders.
+
+SEE YOUR PROGRESS
+• Log weigh-ins by hand, or read your body weight from Apple Health.
+• A clear weight chart with a seven-day average, total change and weekly change.
+• Set a goal weight and see how far you've come.
+
+AN ESTIMATE, CLEARLY LABELED
+• Tendr draws a simple estimated level curve from the doses you have logged, using a simplified half-life model.
+• It is an approximation for your own reference, not a measurement of anything in your body, and it never suggests what to take or how much.
+
+PRIVATE BY DESIGN
+• No account, sign-in, ads or analytics.
+• Your journal is stored only on your iPhone. Tendr has no servers.
+• Apple Health access is read-only and limited to body weight.
+
+LIGHT AND DARK
+A quiet, focused design that follows your iPhone's appearance, with a choice of accent colors.
+
+IMPORTANT
+Tendr is a personal record-keeping app. It does not provide medical advice, diagnosis or treatment, and it does not tell you what dose to take. Always follow the instructions of your prescriber or healthcare professional, and talk to them before making any change to your treatment.
+
+Privacy policy: https://0x63616c.github.io/tendr/privacy/
+Support: https://0x63616c.github.io/tendr/support/

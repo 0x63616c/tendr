@@ -21,6 +21,8 @@
 		590788E6635BD9FD18FF2A88 /* Vial.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91707FF75831793AF9F34D2 /* Vial.swift */; };
 		6F6D0EF2C198DA7ACE962775 /* WeightGoal.swift in Sources */ = {isa = PBXBuildFile; fileRef = B716B1A6D87CF82AF4D5C204 /* WeightGoal.swift */; };
 		8977D2CCBBFBC92F397AFA6C /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7C6EB976A31E0351C41446 /* Store.swift */; };
+		A1F0C0DE5C2E4F1B9D3A7E01 /* ScreenshotFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0C0DE5C2E4F1B9D3A7E02 /* ScreenshotFixture.swift */; };
+		A1F0C0DE5C2E4F1B9D3A7E03 /* AppStoreScreenshots.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0C0DE5C2E4F1B9D3A7E04 /* AppStoreScreenshots.swift */; };
 		974312F3351A76E7FC00B72C /* TreatmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C74C889016FEBBA601994F /* TreatmentView.swift */; };
 		9D9BBA82477A78A62E3E8CFC /* AssistantPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 442027E54FD77E3C6477DD6F /* AssistantPreview.swift */; };
 		A2684679232FBCDC19AB92D0 /* VialViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE8E9F8D5F9A8A8CADA99485 /* VialViews.swift */; };
@@ -62,6 +64,8 @@
 		DCBB333B8EFD53025AD19FD5 /* StillUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = StillUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E6B2E4421F97B007948FB5D9 /* GoalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalView.swift; sourceTree = "<group>"; };
 		EE7C6EB976A31E0351C41446 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		A1F0C0DE5C2E4F1B9D3A7E02 /* ScreenshotFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotFixture.swift; sourceTree = "<group>"; };
+		A1F0C0DE5C2E4F1B9D3A7E04 /* AppStoreScreenshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreScreenshots.swift; sourceTree = "<group>"; };
 		F91707FF75831793AF9F34D2 /* Vial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Vial.swift; sourceTree = "<group>"; };
 		FB03B665E58BD3106E23CE0D /* Still.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Still.entitlements; sourceTree = "<group>"; };
 		FE8E9F8D5F9A8A8CADA99485 /* VialViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VialViews.swift; sourceTree = "<group>"; };
@@ -91,6 +95,7 @@
 				D5B2539898EB583763A28A42 /* Assets.xcassets */,
 				03E0EFE505FE380DEF4BEB01 /* HealthKitWeightStore.swift */,
 				14C4753ACE9F975EC7EF42BA /* PrivacyInfo.xcprivacy */,
+				A1F0C0DE5C2E4F1B9D3A7E02 /* ScreenshotFixture.swift */,
 				FB03B665E58BD3106E23CE0D /* Still.entitlements */,
 				3B5DF07AF9BACBF2DFAEE064 /* StillApp.swift */,
 				EE7C6EB976A31E0351C41446 /* Store.swift */,
@@ -146,6 +151,7 @@
 		9A301BD77B68AE8BFEFBB73F /* StillUITests */ = {
 			isa = PBXGroup;
 			children = (
+				A1F0C0DE5C2E4F1B9D3A7E04 /* AppStoreScreenshots.swift */,
 				76AB8C929B38B5C4144D9B93 /* StillUITests.swift */,
 			);
 			path = StillUITests;
@@ -283,6 +289,7 @@
 				E13D4453B9589D60BEA30624 /* MedicationCard.swift in Sources */,
 				54A3F4BEE4EC1464A9F6E37B /* MedicationLevel.swift in Sources */,
 				3140DE520D3F985B4C17E938 /* RootView.swift in Sources */,
+				A1F0C0DE5C2E4F1B9D3A7E01 /* ScreenshotFixture.swift in Sources */,
 				ADC60342778EA19EB546C959 /* StillApp.swift in Sources */,
 				8977D2CCBBFBC92F397AFA6C /* Store.swift in Sources */,
 				C58F3B5984579587CA3819F3 /* Tracking.swift in Sources */,
@@ -297,6 +304,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1F0C0DE5C2E4F1B9D3A7E03 /* AppStoreScreenshots.swift in Sources */,
 				1878A28B539F99DD562844CC /* StillUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -21,7 +21,111 @@ private_lane :connect_api_key do
   )
 end
 
+# POST /v1/appPriceSchedules replaces the schedule, so this is safe to repeat.
+private_lane :ensure_free_pricing do |options|
+  app = options[:app]
+  client = Spaceship::ConnectAPI.client.tunes_request_client
+  points = client.get("v1/apps/#{app.id}/appPricePoints", { "filter[territory]" => "USA", "limit" => 200 }).body["data"]
+  free = points.find { |point| point.dig("attributes", "customerPrice").to_f.zero? }
+  UI.user_error!("No free USA price point for #{APP_IDENTIFIER}") unless free
+  client.post("v1/appPriceSchedules", {
+    data: {
+      type: "appPriceSchedules",
+      relationships: {
+        app: { data: { type: "apps", id: app.id } },
+        baseTerritory: { data: { type: "territories", id: "USA" } },
+        manualPrices: { data: [{ type: "appPrices", id: "${free}" }] }
+      }
+    },
+    included: [{
+      type: "appPrices",
+      id: "${free}",
+      attributes: { startDate: nil },
+      relationships: { appPricePoint: { data: { type: "appPricePoints", id: free["id"] } } }
+    }]
+  })
+  UI.success("Price set to Free (USA base territory)")
+
+  begin
+    client.get("v2/appAvailabilities/#{app.id}")
+    UI.message("App availability already configured; leaving territories unchanged")
+  rescue StandardError => error
+    UI.message("No app availability yet (#{error.message.lines.first&.strip}); making the app available in all territories")
+    territories = client.get("v1/territories", { "limit" => 200 }).body["data"].map { |territory| territory["id"] }
+    client.post("v2/appAvailabilities", {
+      data: {
+        type: "appAvailabilities",
+        attributes: { availableInNewTerritories: true },
+        relationships: {
+          app: { data: { type: "apps", id: app.id } },
+          territoryAvailabilities: { data: territories.map { |id| { type: "territoryAvailabilities", id: "${#{id}}" } } }
+        }
+      },
+      included: territories.map do |id|
+        {
+          type: "territoryAvailabilities",
+          id: "${#{id}}",
+          attributes: { available: true },
+          relationships: { territory: { data: { type: "territories", id: id } } }
+        }
+      end
+    })
+    UI.success("Available in #{territories.count} territories")
+  end
+end
+
+private_lane :attach_latest_build do |options|
+  app = options[:app]
+  version = options[:version]
+  filter = { "preReleaseVersion.version" => version, processingState: "VALID", expired: false }
+  filter[:version] = options[:build].to_s unless options[:build].to_s.empty?
+  build = Spaceship::ConnectAPI.get_builds(filter: filter.merge(app: app.id), includes: nil, sort: "-uploadedDate", limit: 1).to_models.first
+  UI.user_error!("No processed TestFlight build for #{version}#{" (#{options[:build]})" unless options[:build].to_s.empty?}") unless build
+
+  app_store_version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+  UI.user_error!("No editable App Store version for #{APP_IDENTIFIER}") unless app_store_version
+  UI.user_error!("Editable App Store version is #{app_store_version.version_string}, expected #{version}") unless app_store_version.version_string == version
+  app_store_version.select_build(build_id: build.id)
+  UI.success("Attached build #{version} (#{build.version}) to App Store version #{version} [#{app_store_version.app_store_state}]")
+  build.version
+end
+
 platform :ios do
+  desc "Upload the App Store listing and screenshots, set Free pricing, and attach the latest processed build. Never submits for review."
+  lane :metadata do |options|
+    api_key = connect_api_key
+    version = options[:version] || APP_VERSION
+    screenshots = Dir[File.join(__dir__, "screenshots", "en-US", "*.png")]
+    UI.user_error!("No screenshots in fastlane/screenshots/en-US; run scripts/capture-screenshots.sh and scripts/frame-screenshots.swift") if screenshots.empty? && !options[:skip_screenshots]
+
+    deliver(
+      api_key: api_key,
+      app_identifier: APP_IDENTIFIER,
+      app_version: version,
+      platform: "ios",
+      metadata_path: File.join(__dir__, "metadata"),
+      screenshots_path: File.join(__dir__, "screenshots"),
+      skip_binary_upload: true,
+      skip_screenshots: options[:skip_screenshots] ? true : false,
+      # Names and notes come from metadata/review_information; contact details stay out of git.
+      app_review_information: {
+        email_address: ENV["ASC_REVIEW_EMAIL"].to_s.empty? ? BETA_FEEDBACK_EMAIL : ENV["ASC_REVIEW_EMAIL"],
+        phone_number: ENV["ASC_REVIEW_PHONE"]
+      }.compact,
+      overwrite_screenshots: true,
+      submit_for_review: false,
+      automatic_release: false,
+      run_precheck_before_submit: false,
+      force: true
+    )
+
+    app = Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
+    UI.user_error!("App #{APP_IDENTIFIER} not found in App Store Connect") unless app
+    ensure_free_pricing(app: app)
+    attach_latest_build(app: app, version: version, build: options[:build]) unless options[:skip_build]
+    UI.important("Stopped before Submit for Review. Finish the Age Rating and App Privacy sections, then submit in App Store Connect.")
+  end
+
   desc "Run the fast core test suite"
   lane :verify do
     sh("swift", "test")

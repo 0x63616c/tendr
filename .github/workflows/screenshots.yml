@@ -1,0 +1,46 @@
+name: App Store screenshots
+
+on:
+  pull_request:
+    paths:
+      - 'Still/ScreenshotFixture.swift'
+      - 'Still/Store.swift'
+      - 'StillUITests/AppStoreScreenshots.swift'
+      - 'scripts/capture-screenshots.sh'
+      - 'scripts/frame-screenshots.swift'
+      - '.github/workflows/screenshots.yml'
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+      - name: Capture on iPhone 17 Pro Max (6.9")
+        run: scripts/capture-screenshots.sh build/screenshots/raw
+      - name: Frame for the App Store
+        run: swift scripts/frame-screenshots.swift build/screenshots/raw fastlane/screenshots/en-US
+      - name: Check framed sizes
+        run: |
+          for png in fastlane/screenshots/en-US/*.png; do
+            sips -g pixelWidth -g pixelHeight -g hasAlpha "$png"
+            [[ "$(sips -g pixelWidth -g pixelHeight "$png" | awk '/pixel/ { printf "%s ", $2 }')" == "1320 2868 " ]]
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-store-screenshots
+          path: fastlane/screenshots/en-US/*.png
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: app-store-screenshots-raw
+          path: build/screenshots/raw/*.png
+          if-no-files-found: ignore
