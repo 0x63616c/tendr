@@ -140,8 +140,8 @@ struct TipJarSheet: View {
             Button { Task { await jar.buy(tip) } } label: {
                 ZStack {
                     Text(product?.displayPrice ?? "").opacity(jar.purchasing == tip ? 0 : 1)
-                    if jar.purchasing == tip { ProgressView().controlSize(.small) }
-                }.font(.subheadline.weight(.semibold)).frame(minWidth: 64)
+                    if jar.purchasing == tip { ProgressView().controlSize(.small).tint(Theme.background) }
+                }.font(.subheadline.weight(.semibold)).foregroundStyle(Theme.background).frame(minWidth: 64)
             }
             .buttonStyle(.borderedProminent).buttonBorderShape(.capsule)
             .disabled(product == nil || jar.purchasing != nil)
@@ -162,7 +162,7 @@ struct TipThanks: View {
                 Text("Thank you").font(.largeTitle.bold()).accessibilityIdentifier("tipThanks")
                 Text("Your \(tip.fallbackName.lowercased()) means a lot. It goes straight into keeping Tendr calm, private and independent.")
                     .multilineTextAlignment(.center).foregroundStyle(.secondary)
-                Button { dismiss() } label: { Text("Close").font(.headline).frame(maxWidth: 240).padding(.vertical, 6) }
+                Button { dismiss() } label: { Text("Close").font(.headline).foregroundStyle(Theme.background).frame(maxWidth: 240).padding(.vertical, 6) }
                     .buttonStyle(.borderedProminent).buttonBorderShape(.capsule).padding(.top, 8)
             }.padding(32)
             ConfettiCannon().ignoresSafeArea().allowsHitTesting(false)
