@@ -261,22 +261,15 @@ platform :ios do
     declaration = asc.get("v1/appInfos/#{info.id}/ageRatingDeclaration").body["data"]
     current = declaration["attributes"] || {}
     UI.message("Current age rating answers: #{current.to_json}")
-    levels = %w[NONE INFREQUENT_OR_MILD FREQUENT_OR_INTENSE INFREQUENT FREQUENT]
-    overrides = %w[ageRatingOverride ageRatingOverrideV2 koreaAgeRatingOverride]
+    none = %w[alcoholTobaccoOrDrugUseOrReferences contests gamblingSimulated gunsOrOtherWeapons profanityOrCrudeHumor
+              sexualContentGraphicAndNudity sexualContentOrNudity horrorOrFearThemes matureOrSuggestiveThemes
+              violenceCartoonOrFantasy violenceRealisticProlongedGraphicOrSadistic violenceRealistic]
+    no = %w[advertising ageAssurance gambling healthOrWellnessTopics lootBox messagingAndChat parentalControls
+            socialMedia socialMediaAgeRestricted unrestrictedWebAccess userGeneratedContent]
     wanted = {}
-    current.each do |key, value|
-      next if overrides.include?(key) || %w[kidsAgeBand developerAgeRatingInfoUrl].include?(key)
-      if value == true || value == false || (value.nil? && %w[gambling unrestrictedWebAccess lootBox seventeenPlus ageAssurance advertising healthOrWellnessTopics messagingAndChat parentalControls userGeneratedContent].include?(key))
-        wanted[key] = false
-      elsif value.nil? || levels.include?(value)
-        wanted[key] = "NONE"
-      end
-    end
+    none.each { |key| wanted[key] = "NONE" if current.key?(key) }
+    no.each { |key| wanted[key] = false if current.key?(key) }
     wanted["medicalOrTreatmentInformation"] = "INFREQUENT_OR_MILD"
-    wanted["unrestrictedWebAccess"] = false
-    wanted["gambling"] = false
-    wanted["contests"] = "NONE"
-    wanted["userGeneratedContent"] = false
     UI.message("Setting age rating answers: #{wanted.to_json}")
     updated = asc.patch("v1/ageRatingDeclarations/#{declaration['id']}", {
       data: { type: "ageRatingDeclarations", id: declaration["id"], attributes: wanted }
