@@ -94,7 +94,7 @@ struct DoseEditor: View {
                             }
                             if mode != "mg" && concentration == nil { Text("Add a vial with its concentration to log in \(mode).").font(.subheadline).foregroundStyle(.orange) }
                         }.card()
-                        if entry == nil {
+                        if entry == nil && !store.journal.vials.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack(spacing: 14) {
                                     if let vial {

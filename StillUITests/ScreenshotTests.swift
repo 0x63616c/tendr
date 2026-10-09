@@ -16,7 +16,7 @@ final class ScreenshotTests: XCTestCase {
         let amount = app.textFields["doseAmount"]
         XCTAssertTrue(amount.waitForExistence(timeout: 5))
         amount.tap()
-        amount.typeText("1")
+        amount.typeText("7.5")
         snap("log-dose")
         app.buttons["Cancel"].tap()
 

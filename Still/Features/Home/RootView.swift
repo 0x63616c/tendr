@@ -57,11 +57,12 @@ struct TodayView: View {
                             } else { Button("Set your schedule") { scheduleSheet = true }.font(.headline) }
                             Button { doseSheet = true } label: { Label("Log dose", systemImage: "plus").font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity).padding(.vertical, 3) }.buttonStyle(.borderedProminent).buttonBorderShape(.capsule).accessibilityIdentifier("logDose")
                         }.frame(maxWidth: .infinity, alignment: .leading).frame(height: 128).card()
-                        Button { vialSheet = true } label: {
-                            if let vial = store.journal.vials.sorted(by: { $0.received > $1.received }).first { VialMini(vial: vial) }
-                            else { VStack(spacing: 12) { Image(systemName: "plus").font(.title2); Text("Add vial").font(.caption.weight(.semibold)) }.frame(width: 82, height: 128).card() }
-                        }.buttonStyle(.plain).accessibilityLabel("Vial details")
-                            .accessibilityIdentifier("vialCard")
+                        // Vials are optional; without one, adding a vial lives in Treatment.
+                        if let vial = store.journal.vials.sorted(by: { $0.received > $1.received }).first {
+                            Button { vialSheet = true } label: { VialMini(vial: vial) }
+                                .buttonStyle(.plain).accessibilityLabel("Vial details")
+                                .accessibilityIdentifier("vialCard")
+                        }
                     }
                     MedicationCard()
                     Button { tab = 2 } label: {
