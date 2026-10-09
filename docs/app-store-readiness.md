@@ -1,7 +1,7 @@
 # App Store readiness plan
 
 > **Status: Phase 1 (app fixes) done on 2026-10-09 (PT).**
-> Decisions: **mg-only dose entry for 1.0** (option A for blocker 3). Privacy and support pages are hosted on GitHub Pages from `site/`.
+> Decisions: **mg-only dose entry for 1.0** (option A for blocker 3). Privacy and support pages are live at <https://0x63616c.github.io/tendr/privacy/> and <https://0x63616c.github.io/tendr/support/> (source in `site/`, published with `scripts/publish-site.sh`).
 > Next: Phases 2–4 (screenshots, listing as code, release workflow). See [Progress](#progress).
 
 ## Progress
@@ -40,7 +40,9 @@ Goal: get Tendr through App Store review the first time. That means a profession
 
 ## Blockers (likely to cause a rejection)
 
-### 1. No privacy policy or support URL
+### 1. No privacy policy or support URL ✅ pages live
+**Done 2026-10-09.** Privacy: <https://0x63616c.github.io/tendr/privacy/> · Support: <https://0x63616c.github.io/tendr/support/> (contact `support@worldwidewebb.co`). Source is in `site/`; `scripts/publish-site.sh` publishes it to the `gh-pages` branch, so `docs/` stays private. Still to do: put both URLs in App Store Connect (`privacy_url.txt` / `support_url.txt` in Phase 3) and link the privacy policy from Settings › Privacy & About in the app (Phase 1).
+
 A HealthKit app must link a privacy policy, both in App Store Connect and inside the app. A support URL is required for every app. Guidelines 5.1.1 and 5.1.3.
 
 - **Plan:** host both pages on GitHub Pages. The assistant can write them. The privacy policy covers on-device storage only, read-only weight from Apple Health, no tracking, no data sent anywhere, and how to delete data.
@@ -123,14 +125,14 @@ The Settings footer says "Tendr stays up to date in the background when Apple He
 
 ## Proposed defaults (confirm when resuming)
 
-- Privacy and support pages: **GitHub Pages**
+- Privacy and support pages: **GitHub Pages** (live, see blocker 1)
 - Price: **Free**
 - Category: **Health & Fitness** (primary). Medical is possible but invites stricter review.
 - Name: **Tendr: Dose & Weight Journal**
 
 ## Needs from Calum
 
-1. A privacy policy and support URL. Approve GitHub Pages, or provide another host.
+1. ~~A privacy policy and support URL.~~ Done (GitHub Pages, see blocker 1).
 2. The units decision for blocker 3 (option A or B).
 3. Complete the **Age Rating** and **App Privacy** questionnaires in App Store Connect. Expected answer for App Privacy: **Data Not Collected**.
 4. Confirm the App Store Connect API key used in CI (`ASC_KEY_ID`) has the **App Manager** role or higher. `deliver` needs it to edit metadata.
@@ -146,7 +148,7 @@ The Settings footer says "Tendr stays up to date in the background when Apple He
 
 ## Next steps when resuming
 
-1. Get the two answers above (URL hosting, units decision).
+1. Get the units decision (URL hosting is done).
 2. Phase 1 app fixes on a branch, then a PR.
 3. Phases 2–4 (screenshots, listing, release workflow), then a PR.
 4. Run `release`, review it in App Store Connect, then Calum submits.
