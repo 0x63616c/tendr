@@ -1,7 +1,7 @@
 // Renders App Store marketing frames from raw simulator captures.
-// Palette and type come from the app: the icon's ink and paper (scripts/render-icon.swift),
-// Theme.aqua's dark-mode mint, SF Pro headlines and the tracked uppercase eyebrow used on the
-// medication card.
+// Palette and type come from the app: the icon's ink and paper (scripts/render-icon.swift), the
+// Graphite accent (AccentPreferences in Still/StillApp.swift), SF Pro headlines and the tracked
+// uppercase eyebrow used on the medication card. Black, white and graphite only: no colour accents.
 //
 //   swiftc -parse-as-library scripts/frame-screenshots.swift -o build/frame-screenshots
 //   build/frame-screenshots build/screenshots/raw fastlane/screenshots/en-US build/screenshots/overview.png
@@ -17,14 +17,15 @@ struct Shot {
     let subtitle: String
 }
 
-/// Order is the App Store order; the first three carry the listing. Subtitles break by hand so lines balance.
+/// Order is the App Store order: every main shot in dark, then a single light shot to close.
+/// The first three carry the listing. Subtitles break by hand so lines balance.
 let shots = [
-    Shot(screen: "home", eyebrow: "Dose & weight journal", headline: "A calm journal\nfor your treatment.", subtitle: "Doses, weight and progress together,\nkept privately on your iPhone."),
-    Shot(screen: "progress", eyebrow: "Progress", headline: "See how far\nyou've come.", subtitle: "Your weight trend, goal and weekly\nchange, drawn from your own entries."),
-    Shot(screen: "log-dose", eyebrow: "Logging", headline: "Log a dose\nin seconds.", subtitle: "The amount in mg, the time and\nan optional note. Nothing more."),
-    Shot(screen: "journal", eyebrow: "Journal", headline: "Your history,\nday by day.", subtitle: "Every dose and weigh-in in one tidy\ntimeline that is easy to edit."),
-    Shot(screen: "settings", eyebrow: "Privacy", headline: "Private\nby design.", subtitle: "No account and no servers.\nApple Health weight is read-only."),
-    Shot(screen: "home", appearance: "dark", eyebrow: "Light & dark", headline: "Easy on the eyes,\nday or night.", subtitle: "Tendr follows your iPhone's light\nor dark appearance."),
+    Shot(screen: "home", appearance: "dark", eyebrow: "Dose & weight journal", headline: "A calm journal\nfor your treatment.", subtitle: "Doses, weight and progress together,\nkept privately on your iPhone."),
+    Shot(screen: "progress", appearance: "dark", eyebrow: "Progress", headline: "See how far\nyou've come.", subtitle: "Your weight trend, goal and weekly\nchange, drawn from your own entries."),
+    Shot(screen: "log-dose", appearance: "dark", eyebrow: "Logging", headline: "Log a dose\nin seconds.", subtitle: "The amount in mg, the time and\nan optional note. Nothing more."),
+    Shot(screen: "journal", appearance: "dark", eyebrow: "Journal", headline: "Your history,\nday by day.", subtitle: "Every dose and weigh-in in one tidy\ntimeline, filtered in a tap."),
+    Shot(screen: "settings", appearance: "dark", eyebrow: "Privacy", headline: "Private\nby design.", subtitle: "No account and no servers.\nApple Health weight is read-only."),
+    Shot(screen: "home", eyebrow: "Light & dark", headline: "Easy on the eyes,\nday or night.", subtitle: "Tendr follows your iPhone's light\nor dark appearance."),
 ]
 
 let canvas = CGSize(width: 1320, height: 2868)
@@ -32,25 +33,23 @@ let canvas = CGSize(width: 1320, height: 2868)
 enum Palette {
     static let ink = Color(white: 0.055)
     static let paper = Color(white: 0.95)
-    static let muted = Color(white: 0.63)
-    static let mint = Color(red: 0.39, green: 0.84, blue: 0.73)
-    static let aqua = Color(red: 0.02, green: 0.46, blue: 0.43)
+    static let mist = Color(red: 0.96, green: 0.96, blue: 0.98) // Theme.background (light)
+    static let graphiteDark = Color(white: 0.72)                 // Graphite accent, dark
+    static let graphiteLight = Color(white: 0.28)                // Graphite accent, light
+    static let mutedDark = Color(white: 0.63)
+    static let mutedLight = Color(white: 0.38)
 }
 
 struct Backdrop: View {
-    var body: some View {
-        ZStack {
-            Palette.ink
-            RadialGradient(colors: [Palette.aqua.opacity(0.95), Palette.aqua.opacity(0.3), .clear], center: UnitPoint(x: 0.5, y: 0.6), startRadius: 0, endRadius: 1300)
-            RadialGradient(colors: [Palette.mint.opacity(0.10), .clear], center: UnitPoint(x: 0.5, y: 0.02), startRadius: 0, endRadius: 820)
-        }
-    }
+    let dark: Bool
+    var body: some View { dark ? Palette.ink : Palette.mist }
 }
 
 /// A modern iPhone with a titanium rim, black bezel and Dynamic Island, sized by its screen width.
 struct Device: View {
     let screen: NSImage
     let width: CGFloat
+    let dark: Bool
     var body: some View {
         let height = width * screen.size.height / screen.size.width
         let bezel = width * 0.03
@@ -72,7 +71,7 @@ struct Device: View {
         }
         .frame(width: outer.width, height: outer.height)
         .background(alignment: .topLeading) { buttons(outer: outer, rim: rim) }
-        .shadow(color: .black.opacity(0.55), radius: 70, y: 40)
+        .shadow(color: .black.opacity(dark ? 0.55 : 0.2), radius: 70, y: 40)
     }
 
     private func buttons(outer: CGSize, rim: CGFloat) -> some View {
@@ -96,27 +95,28 @@ struct Device: View {
 struct Frame: View {
     let shot: Shot
     let screen: NSImage
+    var dark: Bool { shot.appearance == "dark" }
     var body: some View {
         ZStack(alignment: .top) {
-            Backdrop()
+            Backdrop(dark: dark)
             VStack(spacing: 0) {
                 Text(shot.eyebrow.uppercased())
                     .font(.system(size: 32, weight: .bold))
                     .tracking(5.1)
-                    .foregroundStyle(Palette.mint)
+                    .foregroundStyle(dark ? Palette.graphiteDark : Palette.graphiteLight)
                 Text(shot.headline)
                     .font(.system(size: 112, weight: .bold))
                     .tracking(-1.6)
                     .lineSpacing(2)
-                    .foregroundStyle(Palette.paper)
+                    .foregroundStyle(dark ? Palette.paper : Palette.ink)
                     .padding(.top, 34)
                 Text(shot.subtitle)
                     .font(.system(size: 44, weight: .regular))
                     .lineSpacing(8)
-                    .foregroundStyle(Palette.muted)
+                    .foregroundStyle(dark ? Palette.mutedDark : Palette.mutedLight)
                     .frame(maxWidth: 1060)
                     .padding(.top, 34)
-                Device(screen: screen, width: 1100)
+                Device(screen: screen, width: 1100, dark: dark)
                     .padding(.top, 84)
             }
             .multilineTextAlignment(.center)

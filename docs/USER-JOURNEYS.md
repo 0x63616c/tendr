@@ -9,7 +9,7 @@ Open an empty app without an account. Set medication, optionally add a vial (rec
 Tap Log on the dashboard. Enter an amount in the preferred unit; see its mg equivalent for volume/units. The actual time defaults to now. Save remains visible above the keyboard. Saving updates the journal, medication estimate, vial estimate, and intended schedule occurrence atomically. A future actual date becomes a plan.
 
 ## 3. Resolve an overdue dose
-The dashboard shows the oldest unresolved occurrence and its date. Log the actual time or select Skipped. Skipping needs no amount. Both resolve that occurrence without moving the next one. Planned records never count as taken. Taken ticks are green; skipped uses a minus symbol.
+The dashboard shows the oldest unresolved occurrence and its date. Log the actual time or select Skipped. Skipping needs no amount. Both resolve that occurrence without moving the next one. Planned records never count as taken. Taken ticks use the accent colour; skipped uses a minus symbol.
 
 ## 4. Log weight
 Tap the weight-card plus. Enter a plain decimal in pounds or kilograms, optionally change the date or add a note. Invalid/impossible input cannot save. Unit switching converts the number. Historical edits update trends. Future records stay out of actual analytics.

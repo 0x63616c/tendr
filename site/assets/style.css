@@ -1,8 +1,7 @@
 /* Tendr site. Mirrors the app's Theme (Still/StillApp.swift):
    background  light #F5F5FA / dark #000
    card        light #FFF    / dark #111 (white 0.065), radius 24, hairline stroke
-   accent      Graphite light #474747 / dark #B8B8B8 (default app tint)
-   aqua        light #04756E / dark #63D6BA (weight / Health)
+   accent      Graphite light #474747 / dark #B8B8B8 (default app tint). Black, white and graphite only.
    type        SF Pro, SF Pro Rounded for numerals and the wordmark */
 :root {
   color-scheme: light dark;
@@ -15,8 +14,6 @@
   --divider: rgba(60, 60, 67, 0.14);
   --accent: #474747;
   --on-accent: #f5f5fa;
-  --aqua: #04756e;
-  --aqua-wash: rgba(4, 117, 110, 0.10);
   --sage: rgba(71, 71, 71, 0.10);
   --rounded: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
@@ -32,8 +29,6 @@
     --divider: rgba(84, 84, 88, 0.55);
     --accent: #b8b8b8;
     --on-accent: #000000;
-    --aqua: #63d6ba;
-    --aqua-wash: rgba(99, 214, 186, 0.12);
     --sage: rgba(184, 184, 184, 0.12);
   }
 }
@@ -46,9 +41,10 @@ body {
   font: 17px/1.5 var(--sans);
   -webkit-font-smoothing: antialiased;
 }
-a { color: var(--aqua); text-decoration: none; }
+a { color: var(--accent); text-decoration: none; }
+.card p a, .card li a, .answer a, .lede a { color: var(--text); text-decoration: underline; text-decoration-color: var(--tertiary); text-underline-offset: 3px; }
 a:hover { text-decoration: underline; text-underline-offset: 3px; }
-:focus-visible { outline: 2px solid var(--aqua); outline-offset: 3px; border-radius: 8px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
 
 .wrap { max-width: 680px; margin: 0 auto; padding: 28px 20px 56px; }
 
@@ -89,7 +85,6 @@ h1 { margin: 0; font-size: 34px; line-height: 1.12; font-weight: 700; letter-spa
   flex: none; display: inline-grid; place-items: center; width: 30px; height: 30px;
   border-radius: 9px; background: var(--sage); color: var(--accent);
 }
-.card h2 .glyph.aqua { background: var(--aqua-wash); color: var(--aqua); }
 .card h2 .glyph svg { width: 17px; height: 17px; }
 .card p { margin: 0 0 10px; }
 .card p:last-child, .card ul:last-child { margin-bottom: 0; }

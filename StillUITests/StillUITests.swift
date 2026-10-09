@@ -28,10 +28,7 @@ final class StillUITests: XCTestCase {
         XCTAssertTrue(app.images["medicationTrendIndicator"].exists)
         XCTAssertFalse(app.buttons["Include explicitly planned doses"].exists)
         capture("Home")
-        app.buttons["Vial details"].tap()
-        XCTAssertTrue(app.textFields["Concentration"].waitForExistence(timeout: 3))
-        capture("Edit Vial")
-        app.buttons["Cancel"].tap()
+        XCTAssertFalse(app.buttons["vialCard"].exists, "Home shows no vial tile until a vial exists")
         app.buttons["logDose"].tap()
         XCTAssertTrue(app.textFields["doseAmount"].waitForExistence(timeout: 3))
         capture("Log dose")
@@ -111,6 +108,40 @@ final class StillUITests: XCTestCase {
         app.buttons["Journal"].tap()
         app.staticTexts["88.5 kg"].tap()
         XCTAssertEqual(app.textFields["weightAmount"].value as? String, "88.5")
+    }
+    @MainActor func testDoseAndWeightLogWithoutAVial() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitest", "--reset-test-journal"]
+        app.launch()
+        XCTAssertTrue(app.buttons["logDose"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["vialCard"].exists)
+        XCTAssertFalse(app.staticTexts["Add vial"].exists)
+
+        app.buttons["logDose"].tap()
+        let dose = app.textFields["doseAmount"]
+        XCTAssertTrue(dose.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Vial'")).firstMatch.exists, "No vial row without a vial")
+        XCTAssertFalse(app.staticTexts["No vial"].exists)
+        dose.tap()
+        dose.typeText("2.5")
+        app.buttons["saveDose"].tap()
+        XCTAssertTrue(app.buttons["logDose"].waitForExistence(timeout: 5))
+
+        app.buttons["logWeight"].tap()
+        let weight = app.textFields["weightAmount"]
+        XCTAssertTrue(weight.waitForExistence(timeout: 5))
+        weight.tap()
+        weight.typeText("201.4")
+        app.buttons["saveWeight"].tap()
+        XCTAssertFalse(weight.waitForExistence(timeout: 2))
+
+        app.buttons["Journal"].tap()
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH '2.5 mg'")).firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["201.4 lbs"].exists)
+
+        // Vials stay reachable from Treatment.
+        app.buttons["Treatment"].tap()
+        XCTAssertTrue(app.buttons["Add Vial"].waitForExistence(timeout: 5))
     }
     @MainActor func testWeightSavesWithKeyboardOpenAndSurvivesRelaunch() {
         let app = XCUIApplication()

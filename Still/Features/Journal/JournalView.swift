@@ -70,10 +70,10 @@ struct JournalView: View {
         HStack(spacing: 14) {
             switch entry {
             case .dose(let e):
-                Image(systemName: e.status == .taken ? "checkmark.circle.fill" : e.status == .skipped ? "minus.circle" : "circle.dashed").foregroundStyle(e.status == .taken ? Color.green : Color.secondary).font(.title2)
+                Image(systemName: e.status == .taken ? "checkmark.circle.fill" : e.status == .skipped ? "minus.circle" : "circle.dashed").foregroundStyle(e.status == .taken ? Theme.pine : Color.secondary).font(.title2)
                 details(title: e.status == .skipped ? "Skipped · \(e.medication)" : "\(number(e.milligrams, digits: 3)) mg · \(e.medication)", subtitle: e.status.rawValue.capitalized, note: e.note)
             case .weight(let e):
-                Image(systemName: "scalemass.fill").foregroundStyle(Theme.aqua).font(.title2)
+                Image(systemName: "scalemass.fill").foregroundStyle(Theme.weight).font(.title2)
                 details(title: "\(number(store.journal.unit.display(e.kilograms))) \(store.journal.unit.symbol)", subtitle: e.healthKitID == nil ? (e.date > Date() ? "Planned weight" : "Weight") : "Apple Health · \(e.sourceName ?? "Imported")", note: e.note)
             }
             Spacer(minLength: 4)

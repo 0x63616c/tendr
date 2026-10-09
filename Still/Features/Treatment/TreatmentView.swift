@@ -74,7 +74,7 @@ struct TreatmentView: View {
                                 HStack { Text("Taken"); Spacer(); Text("\(number(taken.reduce(0) { $0 + $1.milligrams }, digits: 2)) mg").foregroundStyle(.secondary) }.font(.subheadline)
                                 ForEach(taken.prefix(3)) { dose in
                                     HStack(spacing: 4) {
-                                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                                        Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.pine)
                                         Text(dose.date, format: .dateTime.month(.abbreviated).day())
                                         (Text("(") + Text(dose.date, format: .dateTime.weekday(.abbreviated)) + Text(")"))
                                             .foregroundStyle(.secondary)

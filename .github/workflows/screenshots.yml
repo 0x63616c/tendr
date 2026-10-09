@@ -3,7 +3,7 @@ name: Screenshots
 on:
   pull_request:
     paths:
-      - Still/ScreenshotFixture.swift
+      - 'Still/**'
       - StillUITests/ScreenshotTests.swift
       - scripts/capture-screenshots.sh
       - scripts/frame-screenshots.swift
