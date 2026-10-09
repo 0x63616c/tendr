@@ -13,3 +13,4 @@ fastlane/test_output/
 fastlane/Preview.html
 .bundle/
 vendor/bundle/
+fastlane/screenshots/

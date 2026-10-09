@@ -58,6 +58,10 @@ class ReleaseCheck
   def upload_to_testflight(**args)
     @calls << [:upload, args]
   end
+
+  def deliver(**args)
+    @calls << [:deliver, args]
+  end
 end
 
 check = ReleaseCheck.new
@@ -103,4 +107,31 @@ rescue RuntimeError => error
   raise unless error.message == "test failure"
 end
 raise "released after failing tests" unless check.calls.map(&:first) == [:sh]
-puts "Release checks passed (local signing, CI signing, next build, distribution, failure gates)."
+
+check.calls.clear
+ENV["ASC_REVIEW_PHONE"] = "+1 555 0100"
+check.metadata({})
+listing = check.calls.assoc(:deliver).last
+raise "metadata lane must never submit or upload a binary" unless listing[:submit_for_review] == false && listing[:skip_binary_upload] == true && !listing.key?(:ipa)
+raise "metadata lane must run unattended" unless listing[:force] && listing[:run_precheck_before_submit] == false
+raise "metadata paths" unless listing[:metadata_path] == "./fastlane/metadata" && listing[:screenshots_path] == "./fastlane/screenshots" && listing[:overwrite_screenshots]
+raise "review phone from environment" unless listing[:app_review_information] == { phone_number: "+1 555 0100" }
+check.calls.clear
+check.metadata({ skip_screenshots: "true" })
+raise "skip_screenshots option" unless check.calls.assoc(:deliver).last[:skip_screenshots]
+
+metadata = File.expand_path("../fastlane/metadata", __dir__)
+limits = { "name" => 30, "subtitle" => 30, "keywords" => 100, "promotional_text" => 170, "description" => 4000, "release_notes" => 4000 }
+limits.each do |field, limit|
+  text = File.read(File.join(metadata, "en-US", "#{field}.txt"))
+  raise "#{field} is empty" if text.strip.empty?
+  raise "#{field} is #{text.length} characters; the App Store limit is #{limit}" if text.length > limit
+end
+%w[privacy_url support_url marketing_url].each do |field|
+  raise "#{field} must be https" unless File.read(File.join(metadata, "en-US", "#{field}.txt")).match?(%r{\Ahttps://\S+\z})
+end
+raise "keywords must be comma separated without spaces" if File.read(File.join(metadata, "en-US", "keywords.txt")).match?(/,\s/)
+listing_text = Dir[File.join(metadata, "**", "*.txt")].map { |path| File.read(path) }.join("\n")
+banned = /semaglutide|tirzepatide|ozempic|wegovy|mounjaro|zepbound|saxenda|liraglutide|syringe|\bcures?\b|guarantee/i
+raise "listing mentions #{listing_text[banned]}; keep drug names and medical claims out of the listing" if listing_text.match?(banned)
+puts "Release checks passed (local signing, CI signing, next build, distribution, failure gates, App Store listing)."
