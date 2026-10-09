@@ -24,7 +24,7 @@ import SwiftUI
         if ProcessInfo.processInfo.arguments.contains("--uitest"), ProcessInfo.processInfo.arguments.contains("--reset-test-journal") {
             try? FileManager.default.removeItem(at: file.url)
         }
-        if demo { journal = Self.demoJournal() }
+        if demo { journal = ProcessInfo.processInfo.arguments.contains("--screenshots") ? Self.screenshotJournal() : Self.demoJournal() }
         else {
             do { journal = try file.load() } catch { canWrite = false; self.error = "Your journal could not be opened. Please keep the app installed to preserve your data. \(error.localizedDescription)" }
         }

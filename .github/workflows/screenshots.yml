@@ -1,0 +1,78 @@
+name: Screenshots
+
+on:
+  pull_request:
+    paths:
+      - Still/ScreenshotFixture.swift
+      - StillUITests/ScreenshotTests.swift
+      - scripts/capture-screenshots.sh
+      - scripts/frame-screenshots.swift
+      - .github/workflows/screenshots.yml
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure an iOS 26 simulator runtime
+        run: |
+          xcodebuild -version
+          if ! xcrun simctl list runtimes | grep -q '^iOS 26'; then
+            xcodebuild -downloadPlatform iOS
+          fi
+          xcrun simctl list runtimes
+      - name: Capture iPhone 17 Pro Max screens (light and dark)
+        run: scripts/capture-screenshots.sh build/screenshots/raw light dark
+      - name: Render App Store frames
+        run: |
+          swiftc -O -parse-as-library scripts/frame-screenshots.swift -o build/frame-screenshots
+          build/frame-screenshots build/screenshots/raw fastlane/screenshots/en-US build/screenshots/overview.png
+      - name: Check App Store dimensions
+        run: |
+          python3 - <<'PY'
+          import pathlib, struct, sys
+          shots = sorted(pathlib.Path("fastlane/screenshots/en-US").glob("*.png"))
+          if len(shots) != 6:
+              sys.exit(f"expected 6 framed screenshots, found {len(shots)}")
+          for png in shots:
+              data = png.read_bytes()
+              width, height = struct.unpack(">II", data[16:24])
+              colour_type = data[25]
+              print(f"{png.name}: {width}x{height}, colour type {colour_type}")
+              if (width, height) != (1320, 2868) or colour_type != 2:
+                  sys.exit(f"{png.name} must be an opaque 1320x2868 RGB PNG")
+          PY
+          {
+            echo "### App Store screenshots"
+            echo
+            for png in fastlane/screenshots/en-US/*.png; do echo "- \`$(basename "$png")\`"; done
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-store-screenshots
+          path: fastlane/screenshots/en-US/*.png
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-overview
+          path: build/screenshots/overview.png
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-raw
+          path: build/screenshots/raw
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: screenshot-test-results
+          path: build/screenshots/*.xcresult
+          if-no-files-found: ignore
