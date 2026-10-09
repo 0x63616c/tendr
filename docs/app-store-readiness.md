@@ -1,11 +1,24 @@
 # App Store readiness plan
 
-> **Status: Paused on 2026-10-08 (PT).**
-> Waiting on:
-> 1. **A hosted privacy policy and support URL.** Apple requires both before review.
-> 2. **A decision on the syringe units → mg/mL converter.** See blocker 3.
->
-> Nothing in this doc has been built yet. Pick up from [Next steps when resuming](#next-steps-when-resuming).
+> **Status: Phase 1 (app fixes) done on 2026-10-09 (PT).**
+> Decisions: **mg-only dose entry for 1.0** (option A for blocker 3). Privacy and support pages are hosted on GitHub Pages from `site/`.
+> Next: Phases 2–4 (screenshots, listing as code, release workflow). See [Progress](#progress).
+
+## Progress
+
+- [x] **Blocker 1:** privacy and support pages (`site/`, GitHub Pages). The app links both from Settings → Privacy & About (`PrivacyView` in `JournalView.swift`). Still to do: add the URLs in App Store Connect.
+- [x] **Blocker 2:** assistant preview hidden behind `FeatureFlags.assistantPreview = false` (Discover link, Privacy & About section). `AssistantPreview.swift` stays in the tree.
+- [x] **Blocker 3:** mg-only for 1.0 behind `FeatureFlags.syringeUnits = false` (`StillApp.swift`). Hides the mg/mL/Units picker, the units→mg/mL readout, the Settings "Dose entry" sheet and the U-100 toggle in Treatment. Stored `syringeUnits` data still decodes; those entries open and display in mg, and the reading is kept while the mg amount is unchanged. The units UI tests were removed and can come back with the flag.
+- [x] **Blocker 4:** card retitled **"Estimated level"**, rounded to 2 decimals, with a "not a measured level or medical advice" caption. The method notes and paper links stay. `testLivePrecisionIsAlwaysSevenDecimals` was replaced by `testEstimatedLevelIsRoundedAndLabelled`.
+- [x] **Blocker 5:** the background-sync claim was removed. The footer now says Tendr checks Apple Health when you open it. No entitlement was added, because it needs a provisioning profile change. The observer code is still there; add `com.apple.developer.healthkit.background-delivery` (and regenerate the profile) to turn it on later.
+- [x] **Blocker 6:** demo data is now "Weekly medication", plain 0.5 mg doses, a simple half-life model, and no vials, concentration or syringe.
+- [x] First-launch disclaimer (`MedicalDisclaimerGate` in `StillApp.swift`). It shows once and is stored in `@AppStorage`; it's skipped for `--demo` and `--uitest`.
+- [x] "Still backup" → "Tendr backup" (`Tracking.swift`).
+- [x] Dropped `NSHealthUpdateUsageDescription` (the app only reads from Health).
+- [x] Build number resynced to 17 in `project.yml` and `Still.xcodeproj`.
+- [ ] CSV/JSON export, a better icon, reviewer notes.
+- [ ] Phases 2–5.
+- Open question: the home screen still shows the vial card ("Add vial"), and vials store mg/mL concentration. That's an inventory feature, not a calculator, but consider hiding it for 1.0 if review pushes back.
 
 Goal: get Tendr through App Store review the first time. That means a professional listing, automated screenshots, and a release pipeline that stops just before **Submit for Review**, so Calum presses the button himself.
 

@@ -64,12 +64,12 @@ struct DiscoverView: View {
                                 .background(Theme.card, in: RoundedRectangle(cornerRadius: 18))
                         }.buttonStyle(.plain)
                     }
-                    NavigationLink { AssistantPreview() } label: {
+                    if FeatureFlags.assistantPreview { NavigationLink { AssistantPreview() } label: {
                         HStack(spacing: 16) {
                             VStack(alignment: .leading, spacing: 5) { Text("A space to talk").font(.headline); Text("Assistant · Coming soon").font(.caption).foregroundStyle(.secondary) }
                             Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
                         }.card()
-                    }.buttonStyle(.plain)
+                    }.buttonStyle(.plain) }
                 }.padding(16).padding(.bottom, 16)
             }.background(Theme.background).navigationTitle("Discover")
         }

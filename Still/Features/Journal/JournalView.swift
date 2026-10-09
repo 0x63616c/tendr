@@ -111,7 +111,7 @@ struct SettingsView: View {
                             ForEach(accents.options, id: \.self) { Text($0).tag($0) }
                         }
                         Picker("Weight unit", selection: Binding(get: { store.journal.unit }, set: { var next = store.journal; next.unit = $0; _ = store.commit(next) })) { ForEach(WeightUnit.allCases, id: \.self) { Text($0.symbol).tag($0) } }
-                        Button("Dose entry") { treatment = true }
+                        if FeatureFlags.syringeUnits { Button("Dose entry") { treatment = true } }
                         Picker("Appearance", selection: Binding(get: { store.journal.appearance }, set: { var next = store.journal; next.appearance = $0; _ = store.commit(next) })) { Text("System").tag("system"); Text("Light").tag("light"); Text("Dark").tag("dark") }
                     }
                     Section {
@@ -135,7 +135,7 @@ struct SettingsView: View {
                             }.accessibilityIdentifier("lastHealthSync")
                         }
                     } header: { Text("Apple Health") } footer: {
-                        Text(store.journal.healthKitWeightsEnabled ? "Tendr stays up to date in the background when Apple Health records a new weight. You can also tap above to sync now." : "Read-only. Tendr never writes to Apple Health.")
+                        Text(store.journal.healthKitWeightsEnabled ? "Tendr checks Apple Health for new weights each time you open it. You can also tap above to sync now. Read-only." : "Read-only. Tendr never writes to Apple Health.")
                     }
                     Section {
                         Toggle("Start weights at first dose", isOn: Binding(
@@ -176,9 +176,9 @@ struct TreatmentEditor: View {
                 }
                 Section("Estimate model") { Picker("Model", selection: $model) { ForEach(MedicationModel.allCases, id: \.self) { Text($0.title).tag($0) } } }
                 if model == .halfLife { Section { Stepper("\(number(halfLife)) days", value: $halfLife, in: 0.5...30, step: 0.5) } header: { Text("Model half-life") } footer: { Text("Used only for the estimate graph. Your dose and schedule are set separately.") } }
-                Section { Toggle("I use a U-100 syringe", isOn: $u100) } header: { Text("Dose entry") } footer: { Text("U-100 means 100 units per mL. Check the marking on your syringe.") }
+                if FeatureFlags.syringeUnits { Section { Toggle("I use a U-100 syringe", isOn: $u100) } header: { Text("Dose entry") } footer: { Text("U-100 means 100 units per mL. Check the marking on your syringe.") } }
             }.navigationTitle("Treatment").navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }; ToolbarItem(placement: .confirmationAction) { Button("Save") { var next = store.journal; next.medication = medication.trimmingCharacters(in: .whitespacesAndNewlines); next.halfLifeDays = halfLife; next.medicationModel = model; next.syringeUnitsPerML = u100 ? 100 : nil; if store.commit(next) { dismiss() } }.disabled(medication.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) } }
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }; ToolbarItem(placement: .confirmationAction) { Button("Save") { var next = store.journal; next.medication = medication.trimmingCharacters(in: .whitespacesAndNewlines); next.halfLifeDays = halfLife; next.medicationModel = model; if FeatureFlags.syringeUnits { next.syringeUnitsPerML = u100 ? 100 : nil }; if store.commit(next) { dismiss() } }.disabled(medication.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) } }
                 .onAppear { medication = store.journal.medication; halfLife = store.journal.halfLifeDays; model = store.journal.resolvedMedicationModel; u100 = store.journal.syringeUnitsPerML == 100 }
         }
     }
@@ -188,7 +188,11 @@ struct PrivacyView: View {
         List {
             Section("On this iPhone") { Text("No account, ads, analytics SDKs, or server. Your journal is stored locally. Device backups follow your iPhone settings.") }
             Section("Your health") { Text("Tendr is a journal, not a dosing guide. Medication graphs are simplified estimates, not measured levels. Follow your prescriber's instructions.") }
-            Section("Assistant") { Text("The assistant is a coming-soon preview. No chat service is connected and no journal data is sent to AI.") }
+            Section("Help") {
+                Link(destination: URL(string: "https://0x63616c.github.io/tendr/privacy/")!) { Label("Privacy policy", systemImage: "hand.raised") }
+                Link(destination: URL(string: "https://0x63616c.github.io/tendr/support/")!) { Label("Support", systemImage: "questionmark.circle") }
+            }
+            if FeatureFlags.assistantPreview { Section("Assistant") { Text("The assistant is a coming-soon preview. No chat service is connected and no journal data is sent to AI.") } }
         }.navigationTitle("Privacy & About").navigationBarTitleDisplayMode(.inline)
     }
 }

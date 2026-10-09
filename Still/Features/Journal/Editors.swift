@@ -81,7 +81,9 @@ struct DoseEditor: View {
                     }
                     if status != .skipped {
                         VStack(spacing: 16) {
-                            Picker("Input unit", selection: Binding(get: { mode }, set: { changeMode($0) })) { Text("mg").tag("mg"); Text("mL").tag("mL"); Text("Units").tag("units") }.pickerStyle(.segmented)
+                            if FeatureFlags.syringeUnits {
+                                Picker("Input unit", selection: Binding(get: { mode }, set: { changeMode($0) })) { Text("mg").tag("mg"); Text("mL").tag("mL"); Text("Units").tag("units") }.pickerStyle(.segmented)
+                            }
                             ZStack(alignment: .trailing) {
                                 TextField("0", text: $amount).keyboardType(.decimalPad).font(.system(size: 54, weight: .medium, design: .rounded)).multilineTextAlignment(.center).accessibilityLabel("Dose amount").accessibilityIdentifier("doseAmount")
                                 Text(mode).font(.title3).foregroundStyle(.secondary)
@@ -135,6 +137,8 @@ struct DoseEditor: View {
                         confirmedU100 = entry.syringeUnitsPerML == 100 || confirmedU100
                         date = entry.date; status = entry.status; note = entry.note; vialID = entry.vialID
                     } else { vialID = store.journal.vials.sorted { $0.received > $1.received }.first?.id; mode = store.journal.doseInputUnit ?? (confirmedU100 && vialID != nil ? "units" : "mg") }
+                    // mg-only entry: entries recorded in units or mL open showing their stored mg.
+                    if !FeatureFlags.syringeUnits { mode = "mg"; if let entry { amount = number(entry.milligrams, digits: 4) } }
                 }
         }
     }
@@ -160,7 +164,11 @@ struct DoseEditor: View {
         if let entry { updated.id = entry.id }
         updated.vialID = vialID
         if mode == "units" && status != .skipped { updated.syringeUnits = parse(amount); updated.syringeUnitsPerML = 100 }
-        if store.save(dose: updated, inputUnit: entry == nil && status != .skipped ? mode : nil) {
+        // Keep a previously recorded syringe reading while its mg amount is unchanged, so it can return with the feature.
+        if !FeatureFlags.syringeUnits, let entry, entry.syringeUnits != nil, abs(entry.milligrams - mg) < 1e-9 {
+            updated.syringeUnits = entry.syringeUnits; updated.syringeUnitsPerML = entry.syringeUnitsPerML
+        }
+        if store.save(dose: updated, inputUnit: FeatureFlags.syringeUnits && entry == nil && status != .skipped ? mode : nil) {
             dismiss()
         } else { localError = store.error; store.error = nil }
     }

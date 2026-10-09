@@ -95,7 +95,7 @@ public enum TrackingError: LocalizedError {
         case .invalidAmount: "Enter a positive, finite amount."
         case .futureTaken: "A future dose must be planned, not marked taken."
         case .invalidSchedule: "Choose at least one weekday and a valid reminder time."
-        case .invalidFile: "This file is not a valid Still backup. Your current data has not changed."
+        case .invalidFile: "This file is not a valid Tendr backup. Your current data has not changed."
         }
     }
 }

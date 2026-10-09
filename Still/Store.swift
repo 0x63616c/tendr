@@ -178,11 +178,11 @@ import SwiftUI
             reminderStatus = "Reminders on"
         } catch { reminderStatus = "Could not schedule reminders"; self.error = error.localizedDescription }
     }
+    /// Neutral sample data for demos and screenshots: plain mg doses, a generic medication name, no vial or syringe maths.
     static func demoJournal() -> Journal {
-        var journal = Journal(); journal.concentration = 5; journal.containerML = 2
+        var journal = Journal()
+        journal.medication = "Weekly medication"; journal.medicationModel = .halfLife; journal.halfLifeDays = 7
         journal.schedule.weekdays = [2, 5]
-        journal.syringeUnitsPerML = 100
-        journal.vials = [Vial(received: Date().addingTimeInterval(-21 * 86400), medication: "Semaglutide", concentration: 5, volumeML: 2)]
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
         journal.goal = WeightGoal(kilograms: 82, date: cal.date(byAdding: .day, value: 60, to: today))
@@ -192,10 +192,7 @@ import SwiftUI
             WeightEntry(date: cal.date(byAdding: .day, value: (i - values.count + 1) * 2, to: today)!, kilograms: value, note: i == values.count - 1 ? "Feeling more like myself. A long walk this morning." : "")
         }
         journal.doses = (0..<8).map { i in
-            DoseEntry(date: cal.date(byAdding: .day, value: -i * 7 - 2, to: today)!, medication: "Semaglutide", milligrams: 0.5, concentration: 5, note: i == 0 ? "Easy morning. Keeping water close today." : "")
-        }
-        for i in journal.doses.indices where journal.doses[i].date >= journal.vials[0].received {
-            journal.doses[i].vialID = journal.vials[0].id
+            DoseEntry(date: cal.date(byAdding: .day, value: -i * 7 - 2, to: today)!, medication: journal.medication, milligrams: 0.5, note: i == 0 ? "Easy morning. Keeping water close today." : "")
         }
         return journal
     }
