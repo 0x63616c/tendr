@@ -7,6 +7,8 @@ APP_VERSION = "1.0.0"
 INTERNAL_GROUP = "Owner Preview"
 BETA_DESCRIPTION = "Tendr is a private, local-first companion for tracking doses, medication levels, vials, weight, schedules, and progress."
 BETA_FEEDBACK_EMAIL = ENV.fetch("ASC_BETA_FEEDBACK_EMAIL")
+# Lanes run inside fastlane/ but actions run from the project root, so paths must be absolute.
+FASTLANE_DIR = File.expand_path(__dir__)
 
 private_lane :connect_api_key do
   key_path = ENV["ASC_KEY_PATH"]
@@ -74,19 +76,46 @@ private_lane :ensure_free_pricing do |options|
   end
 end
 
-private_lane :attach_latest_build do |options|
+# Apple only creates review details with a contact phone, which is kept out of git (ASC_REVIEW_PHONE).
+private_lane :upload_review_information do |options|
+  read = ->(name) { File.read(File.join(FASTLANE_DIR, "review_information", "#{name}.txt")).strip }
+  attributes = {
+    contact_first_name: read.call("first_name"),
+    contact_last_name: read.call("last_name"),
+    contact_email: ENV["ASC_REVIEW_EMAIL"].to_s.empty? ? BETA_FEEDBACK_EMAIL : ENV["ASC_REVIEW_EMAIL"],
+    contact_phone: ENV["ASC_REVIEW_PHONE"].to_s.empty? ? nil : ENV["ASC_REVIEW_PHONE"],
+    notes: read.call("notes"),
+    demo_account_required: false
+  }.compact
+  detail = begin
+    options[:app_store_version].fetch_app_store_review_detail
+  rescue StandardError
+    nil
+  end
+  if detail
+    detail.update(attributes: attributes)
+    UI.success("Updated App Review contact and notes")
+    true
+  elsif attributes[:contact_phone]
+    options[:app_store_version].create_app_store_review_detail(attributes: attributes)
+    UI.success("Created App Review contact and notes")
+    true
+  else
+    UI.important("App Review information not set: Apple requires a contact phone. Add it in App Store Connect (or the ASC_REVIEW_PHONE secret) and rerun to upload the review notes.")
+    false
+  end
+end
+
+private_lane :attach_build do |options|
   app = options[:app]
-  version = options[:version]
+  version = options[:app_store_version].version_string
   filter = { "preReleaseVersion.version" => version, processingState: "VALID", expired: false }
   filter[:version] = options[:build].to_s unless options[:build].to_s.empty?
   build = Spaceship::ConnectAPI.get_builds(filter: filter.merge(app: app.id), includes: nil, sort: "-uploadedDate", limit: 1).to_models.first
   UI.user_error!("No processed TestFlight build for #{version}#{" (#{options[:build]})" unless options[:build].to_s.empty?}") unless build
 
-  app_store_version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
-  UI.user_error!("No editable App Store version for #{APP_IDENTIFIER}") unless app_store_version
-  UI.user_error!("Editable App Store version is #{app_store_version.version_string}, expected #{version}") unless app_store_version.version_string == version
-  app_store_version.select_build(build_id: build.id)
-  UI.success("Attached build #{version} (#{build.version}) to App Store version #{version} [#{app_store_version.app_store_state}]")
+  options[:app_store_version].select_build(build_id: build.id)
+  UI.success("Attached build #{version} (#{build.version}) to App Store version #{version} [#{options[:app_store_version].app_store_state}]")
   build.version
 end
 
@@ -95,7 +124,7 @@ platform :ios do
   lane :metadata do |options|
     api_key = connect_api_key
     version = options[:version] || APP_VERSION
-    screenshots = Dir[File.join(__dir__, "screenshots", "en-US", "*.png")]
+    screenshots = Dir[File.join(FASTLANE_DIR, "screenshots", "en-US", "*.png")]
     UI.user_error!("No screenshots in fastlane/screenshots/en-US; run scripts/capture-screenshots.sh and scripts/frame-screenshots.swift") if screenshots.empty? && !options[:skip_screenshots]
 
     deliver(
@@ -103,15 +132,10 @@ platform :ios do
       app_identifier: APP_IDENTIFIER,
       app_version: version,
       platform: "ios",
-      metadata_path: File.join(__dir__, "metadata"),
-      screenshots_path: File.join(__dir__, "screenshots"),
+      metadata_path: File.join(FASTLANE_DIR, "metadata"),
+      screenshots_path: File.join(FASTLANE_DIR, "screenshots"),
       skip_binary_upload: true,
       skip_screenshots: options[:skip_screenshots] ? true : false,
-      # Names and notes come from metadata/review_information; contact details stay out of git.
-      app_review_information: {
-        email_address: ENV["ASC_REVIEW_EMAIL"].to_s.empty? ? BETA_FEEDBACK_EMAIL : ENV["ASC_REVIEW_EMAIL"],
-        phone_number: ENV["ASC_REVIEW_PHONE"]
-      }.compact,
       overwrite_screenshots: true,
       submit_for_review: false,
       automatic_release: false,
@@ -122,7 +146,10 @@ platform :ios do
     app = Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
     UI.user_error!("App #{APP_IDENTIFIER} not found in App Store Connect") unless app
     ensure_free_pricing(app: app)
-    attach_latest_build(app: app, version: version, build: options[:build]) unless options[:skip_build]
+    app_store_version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+    UI.user_error!("Editable App Store version is #{app_store_version&.version_string.inspect}, expected #{version}") unless app_store_version&.version_string == version
+    upload_review_information(app_store_version: app_store_version)
+    attach_build(app: app, app_store_version: app_store_version, build: options[:build]) unless options[:skip_build]
     UI.important("Stopped before Submit for Review. Finish the Age Rating and App Privacy sections, then submit in App Store Connect.")
   end
 

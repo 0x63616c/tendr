@@ -71,9 +71,17 @@ end
 
 module Spaceship
   module ConnectAPI
+    module Platform
+      IOS = "IOS"
+    end
+    Version = Struct.new(:version_string)
     App = Struct.new(:id) do
       def self.find(bundle_id)
         new("app-for-#{bundle_id}")
+      end
+
+      def get_edit_app_store_version(platform:)
+        Version.new("1.0.0")
       end
     end
   end
@@ -126,7 +134,8 @@ raise "released after failing tests" unless check.calls.map(&:first) == [:sh]
 # App Store listing: upload metadata, price, attach a build, and never submit.
 check.calls.clear
 check.define_singleton_method(:ensure_free_pricing) { |options| @calls << [:pricing, options] }
-check.define_singleton_method(:attach_latest_build) { |options| @calls << [:attach, options] }
+check.define_singleton_method(:upload_review_information) { |options| @calls << [:review, options] }
+check.define_singleton_method(:attach_build) { |options| @calls << [:attach, options] }
 if Dir[File.expand_path("../fastlane/screenshots/en-US/*.png", __dir__)].empty?
   begin
     check.metadata({})
@@ -138,11 +147,13 @@ if Dir[File.expand_path("../fastlane/screenshots/en-US/*.png", __dir__)].empty?
 end
 check.calls.clear
 check.metadata({ skip_screenshots: true, build: "42" })
-raise "metadata order" unless check.calls.map(&:first) == [:deliver, :pricing, :attach]
+raise "metadata order" unless check.calls.map(&:first) == [:deliver, :pricing, :review, :attach]
 listing = check.calls.assoc(:deliver).last
 raise "metadata must never submit" unless listing[:submit_for_review] == false && listing[:skip_binary_upload] && listing[:force] && listing[:automatic_release] == false
 raise "metadata version" unless listing[:app_version] == "1.0.0" && listing[:app_identifier] == "com.calumwebb.still"
-raise "attach build" unless check.calls.assoc(:attach).last[:build] == "42" && check.calls.assoc(:attach).last[:version] == "1.0.0"
+raise "attach build" unless check.calls.assoc(:attach).last[:build] == "42" && check.calls.assoc(:attach).last[:app_store_version].version_string == "1.0.0"
+raise "listing paths must be absolute" unless listing[:metadata_path].start_with?("/") && listing[:screenshots_path].start_with?("/")
+raise "review details belong outside deliver's metadata" if File.exist?(File.expand_path("../fastlane/metadata/review_information", __dir__))
 
 # Listing limits App Store Connect enforces.
 metadata = File.expand_path("../fastlane/metadata", __dir__)
@@ -153,7 +164,7 @@ limits.each do |field, limit|
   raise "#{field} is #{text.length} characters (limit #{limit})" if text.length > limit
 end
 raise "keywords must be comma separated without spaces" if File.read(File.join(metadata, "en-US", "keywords.txt")).strip.match?(/,\s/)
-listing_text = Dir[File.join(metadata, "**", "*.txt")].map { |path| File.read(path) }.join("\n")
+listing_text = Dir[File.join(metadata, "**", "*.txt"), File.expand_path("../fastlane/review_information/*.txt", __dir__)].map { |path| File.read(path) }.join("\n")
 banned = /ozempic|wegovy|mounjaro|zepbound|semaglutide|tirzepatide|glp-?1|dosage calculator|cure|treats? obesity/i
 raise "listing mentions #{listing_text[banned]}" if listing_text.match?(banned)
 %w[privacy_url support_url].each do |field|

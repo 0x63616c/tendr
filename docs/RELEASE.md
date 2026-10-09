@@ -23,12 +23,12 @@ The local lane uses Xcode's release-Mac keychain/profile setup and allows provis
 
 ## App Store listing and screenshots
 
-The listing lives in `fastlane/metadata` (en-US copy, URLs, category, copyright, review notes). [App Store release](../.github/workflows/release.yml) is manual: run it from the Actions tab (optionally with a build number), or push a tag named `appstore-<version>-<build>` (for example `appstore-1.0.0-26` attaches build 26). It never builds or submits:
+The listing lives in `fastlane/metadata` (en-US copy, URLs, category, copyright); App Review names and notes live in `fastlane/review_information`. [App Store release](../.github/workflows/release.yml) is manual: run it from the Actions tab (optionally with a build number), or push a tag named `appstore-<version>-<build>` (for example `appstore-1.0.0-26` attaches build 26). It never builds or submits:
 
 1. [App Store screenshots](../.github/workflows/screenshots.yml) runs `scripts/capture-screenshots.sh` (a fresh iPhone 17 Pro Max simulator, 9:41 status bar, `AppStoreScreenshots` UI test against the synthetic `--screenshots` journal in `Still/ScreenshotFixture.swift`), then `swift scripts/frame-screenshots.swift` frames them at 1320 × 2868. Headlines live at the top of that script. Raw and framed PNGs are kept as workflow artifacts; `fastlane/screenshots` is generated and ignored by git.
 2. `bundle exec fastlane ios metadata` uploads the listing and screenshots with `deliver` (`submit_for_review: false`), sets the price to Free (all territories if availability was never set), and attaches the latest processed TestFlight build for 1.0.0 (or `build:N`).
 
-It uses the same `ASC_*` secrets as TestFlight. The review contact email defaults to `ASC_BETA_FEEDBACK_EMAIL`; optional `ASC_REVIEW_EMAIL` and `ASC_REVIEW_PHONE` secrets override or add contact details. Age Rating, App Privacy ("Data Not Collected") and **Submit for Review** stay manual in App Store Connect. Locally, run the two scripts on a Mac with Xcode 26.2, then `bundle exec fastlane --env tendr ios metadata`.
+It uses the same `ASC_*` secrets as TestFlight. The review contact email defaults to `ASC_BETA_FEEDBACK_EMAIL` (override with `ASC_REVIEW_EMAIL`). Apple will not create App Review details without a phone number, so until one exists in App Store Connect or the `ASC_REVIEW_PHONE` secret, the lane warns and skips the review notes. Age Rating, App Privacy ("Data Not Collected") and **Submit for Review** stay manual in App Store Connect. Locally, run the two scripts on a Mac with Xcode 26.2, then `bundle exec fastlane --env tendr ios metadata`.
 
 ## Verification and recovery
 
