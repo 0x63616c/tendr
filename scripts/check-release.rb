@@ -134,6 +134,7 @@ raise "released after failing tests" unless check.calls.map(&:first) == [:sh]
 # App Store listing: upload metadata, price, attach a build, and never submit.
 check.calls.clear
 check.define_singleton_method(:ensure_free_pricing) { |options| @calls << [:pricing, options] }
+check.define_singleton_method(:guard_missing_review_detail) { @calls << [:guard] }
 check.define_singleton_method(:upload_review_information) { |options| @calls << [:review, options] }
 check.define_singleton_method(:attach_build) { |options| @calls << [:attach, options] }
 if Dir[File.expand_path("../fastlane/screenshots/en-US/*.png", __dir__)].empty?
@@ -147,7 +148,7 @@ if Dir[File.expand_path("../fastlane/screenshots/en-US/*.png", __dir__)].empty?
 end
 check.calls.clear
 check.metadata({ skip_screenshots: true, build: "42" })
-raise "metadata order" unless check.calls.map(&:first) == [:deliver, :pricing, :review, :attach]
+raise "metadata order" unless check.calls.map(&:first) == [:guard, :deliver, :pricing, :review, :attach]
 listing = check.calls.assoc(:deliver).last
 raise "metadata must never submit" unless listing[:submit_for_review] == false && listing[:skip_binary_upload] && listing[:force] && listing[:automatic_release] == false
 raise "metadata version" unless listing[:app_version] == "1.0.0" && listing[:app_identifier] == "com.calumwebb.still"

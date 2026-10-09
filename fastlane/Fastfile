@@ -129,7 +129,11 @@ module TendrMissingReviewDetailGuard
     UI.important("No App Review details on this version yet; skipping review attachments")
   end
 end
-Deliver::UploadMetadata.prepend(TendrMissingReviewDetailGuard) if defined?(Deliver::UploadMetadata)
+
+private_lane :guard_missing_review_detail do
+  require "deliver"
+  Deliver::UploadMetadata.prepend(TendrMissingReviewDetailGuard) unless Deliver::UploadMetadata.ancestors.include?(TendrMissingReviewDetailGuard)
+end
 
 platform :ios do
   desc "Upload the App Store listing and screenshots, set Free pricing, and attach the latest processed build. Never submits for review."
@@ -139,6 +143,7 @@ platform :ios do
     screenshots = Dir[File.join(FASTLANE_DIR, "screenshots", "en-US", "*.png")]
     UI.user_error!("No screenshots in fastlane/screenshots/en-US; run scripts/capture-screenshots.sh and scripts/frame-screenshots.swift") if screenshots.empty? && !options[:skip_screenshots]
 
+    guard_missing_review_detail
     deliver(
       api_key: api_key,
       app_identifier: APP_IDENTIFIER,
