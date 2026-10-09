@@ -22,7 +22,8 @@ enum FeatureFlags {
     static let background = Color(light: UIColor(red: 0.96, green: 0.96, blue: 0.98, alpha: 1), dark: UIColor.black)
     static let card = Color(light: .white, dark: UIColor(white: 0.065, alpha: 1))
     static var sage: Color { pine.opacity(0.10) }
-    static let aqua = Color(light: UIColor(red: 0.02, green: 0.46, blue: 0.43, alpha: 1), dark: UIColor(red: 0.39, green: 0.84, blue: 0.73, alpha: 1))
+    /// Weight and Health: graphite, so the app stays black, white and graphite whatever accent is chosen.
+    static let weight = Color(light: UIColor(white: 0.28, alpha: 1), dark: UIColor(white: 0.72, alpha: 1))
 }
 extension Color {
     init(light: UIColor, dark: UIColor) { self.init(uiColor: UIColor { $0.userInterfaceStyle == .dark ? dark : light }) }
@@ -83,7 +84,7 @@ struct FilterBar<Value: Hashable>: View {
         case "Orange": Color(light: UIColor(red: 0.65, green: 0.27, blue: 0.02, alpha: 1), dark: .systemOrange)
         case "Purple": Color(light: UIColor(red: 0.37, green: 0.32, blue: 0.83, alpha: 1), dark: UIColor(red: 0.69, green: 0.65, blue: 1, alpha: 1))
         case "Blue": Color(light: .systemBlue, dark: .systemCyan)
-        case "Teal": Theme.aqua
+        case "Teal": Color(light: UIColor(red: 0.02, green: 0.46, blue: 0.43, alpha: 1), dark: UIColor(red: 0.39, green: 0.84, blue: 0.73, alpha: 1))
         case "Rose": Color(light: .systemPink, dark: UIColor(red: 1, green: 0.55, blue: 0.65, alpha: 1))
         default: Color(light: UIColor(white: 0.28, alpha: 1), dark: UIColor(white: 0.72, alpha: 1))
         }

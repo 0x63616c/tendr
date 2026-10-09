@@ -16,7 +16,7 @@ struct WeightEditor: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     VStack(spacing: 18) {
-                        Image(systemName: "scalemass.fill").font(.title).foregroundStyle(Theme.aqua)
+                        Image(systemName: "scalemass.fill").font(.title).foregroundStyle(Theme.weight)
                         TextField("0.0", text: $amount).keyboardType(.decimalPad).font(.system(size: 62, weight: .medium, design: .rounded)).multilineTextAlignment(.center).accessibilityLabel("Weight").accessibilityIdentifier("weightAmount")
                         Text(unit.symbol).font(.subheadline).foregroundStyle(.secondary)
                         if !amount.isEmpty && !valid { Text("Enter a valid weight.").font(.caption).foregroundStyle(.orange) }
@@ -74,7 +74,7 @@ struct DoseEditor: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     if let entry {
-                        HStack { Image(systemName: "syringe.fill").foregroundStyle(.indigo); Text(entry.medication).font(.headline); Spacer() }
+                        HStack { Image(systemName: "syringe.fill").foregroundStyle(Theme.pine); Text(entry.medication).font(.headline); Spacer() }
                         if let intended = entry.scheduledDate ?? scheduledDate {
                             Label { Text(intended, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day().hour().minute()) } icon: { Image(systemName: "calendar") }.font(.subheadline).foregroundStyle(.secondary)
                         }
@@ -88,7 +88,7 @@ struct DoseEditor: View {
                                 TextField("0", text: $amount).keyboardType(.decimalPad).font(.system(size: 54, weight: .medium, design: .rounded)).multilineTextAlignment(.center).accessibilityLabel("Dose amount").accessibilityIdentifier("doseAmount")
                                 Text(mode).font(.title3).foregroundStyle(.secondary)
                             }.padding(.vertical, 10)
-                            if mode != "mg", let mg = milligrams { Text("\(number(mg, digits: 4)) mg · \(number((parse(amount) ?? 0) / (mode == "units" ? 100 : 1), digits: 4)) mL").font(.subheadline.weight(.medium)).foregroundStyle(.indigo) }
+                            if mode != "mg", let mg = milligrams { Text("\(number(mg, digits: 4)) mg · \(number((parse(amount) ?? 0) / (mode == "units" ? 100 : 1), digits: 4)) mL").font(.subheadline.weight(.medium)).foregroundStyle(Theme.pine) }
                             if mode == "units" && store.journal.syringeUnitsPerML != 100 {
                                 Button("Set up your syringe") { preferences = true }.font(.subheadline)
                             }
@@ -215,7 +215,7 @@ struct ScheduleEditor: View {
                 case .weekdays:
                     Section { ForEach(1...7, id: \.self) { day in
                         Button { if days.contains(day) { days.remove(day) } else { days.insert(day) } } label: {
-                            HStack { Text(calendar.weekdaySymbols[day - 1]).foregroundStyle(.primary); Spacer(); if days.contains(day) { Image(systemName: "checkmark").foregroundStyle(.green) } }
+                            HStack { Text(calendar.weekdaySymbols[day - 1]).foregroundStyle(.primary); Spacer(); if days.contains(day) { Image(systemName: "checkmark").foregroundStyle(Theme.pine) } }
                         }.accessibilityAddTraits(days.contains(day) ? .isSelected : [])
                     } } header: { Text("Days of the week") } footer: { Text("Choose the days in your prescribed schedule. Your actual dose dates can be logged separately.") }
                 case .interval:

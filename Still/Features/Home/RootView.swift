@@ -68,7 +68,7 @@ struct TodayView: View {
                     Button { tab = 2 } label: {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
-                                Label("Weight", systemImage: "scalemass.fill").font(.subheadline.weight(.semibold)).foregroundStyle(Theme.aqua)
+                                Label("Weight", systemImage: "scalemass.fill").font(.subheadline.weight(.semibold)).foregroundStyle(Theme.weight)
                                 Spacer()
                                 Color.clear.frame(width: 52, height: 52)
                             }
@@ -158,11 +158,11 @@ struct WeightChart: View {
         Chart {
             ForEach(trend) { entry in
                 AreaMark(x: .value("Date", entry.date), yStart: .value("Base", bounds.lowerBound), yEnd: .value("Weight", unit.display(entry.kilograms)))
-                    .foregroundStyle(LinearGradient(colors: [Theme.aqua.opacity(0.18), Theme.aqua.opacity(0.01)], startPoint: .top, endPoint: .bottom)).interpolationMethod(.catmullRom)
-                LineMark(x: .value("Date", entry.date), y: .value("Weight", unit.display(entry.kilograms))).foregroundStyle(Theme.aqua).lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round)).interpolationMethod(.catmullRom)
+                    .foregroundStyle(LinearGradient(colors: [Theme.weight.opacity(0.18), Theme.weight.opacity(0.01)], startPoint: .top, endPoint: .bottom)).interpolationMethod(.catmullRom)
+                LineMark(x: .value("Date", entry.date), y: .value("Weight", unit.display(entry.kilograms))).foregroundStyle(Theme.weight).lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round)).interpolationMethod(.catmullRom)
             }
             ForEach(sorted) { entry in
-                PointMark(x: .value("Date", entry.date), y: .value("Weight", unit.display(entry.kilograms))).foregroundStyle(Theme.aqua).symbolSize(compact ? 16 : 45)
+                PointMark(x: .value("Date", entry.date), y: .value("Weight", unit.display(entry.kilograms))).foregroundStyle(Theme.weight).symbolSize(compact ? 16 : 45)
             }
             if let selected, let nearest = sorted.min(by: { abs($0.date.timeIntervalSince(selected)) < abs($1.date.timeIntervalSince(selected)) }) {
                 RuleMark(x: .value("Selected", nearest.date)).foregroundStyle(.secondary.opacity(0.4)).annotation(position: .top) { Text("\(number(unit.display(nearest.kilograms))) \(unit.symbol)").font(.caption.bold()).padding(5).background(Theme.card, in: Capsule()) }
@@ -191,7 +191,7 @@ struct ProgressViewScreen: View {
                             .accessibilityLabel("Log weight")
                     }.padding(.horizontal, 8)
                     VStack(alignment: .leading, spacing: 12) {
-                        Label("Current weight", systemImage: "scalemass.fill").font(.subheadline.weight(.semibold)).foregroundStyle(Theme.aqua)
+                        Label("Current weight", systemImage: "scalemass.fill").font(.subheadline.weight(.semibold)).foregroundStyle(Theme.weight)
                         if let currentWeight {
                             HStack(alignment: .firstTextBaseline, spacing: 5) {
                                 Text(number(store.journal.unit.display(currentWeight))).font(.system(size: 40, weight: .bold, design: .rounded))

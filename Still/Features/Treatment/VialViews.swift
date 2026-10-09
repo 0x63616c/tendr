@@ -85,10 +85,10 @@ struct VialGlyph: View {
             VStack(spacing: 0) {
                 RoundedRectangle(cornerRadius: 3).fill(.secondary.opacity(0.45)).frame(width: 24, height: 7)
                 ZStack(alignment: .bottom) {
-                    RoundedRectangle(cornerRadius: 8).fill(Theme.aqua.opacity(0.08))
-                    RoundedRectangle(cornerRadius: 7).fill(Theme.aqua.opacity(0.65)).frame(height: 51 * max(0, min(1, fraction)))
+                    RoundedRectangle(cornerRadius: 8).fill(Theme.weight.opacity(0.08))
+                    RoundedRectangle(cornerRadius: 7).fill(Theme.weight.opacity(0.65)).frame(height: 51 * max(0, min(1, fraction)))
                     VStack(spacing: 8) { ForEach(0..<4) { _ in Rectangle().fill(.white.opacity(0.35)).frame(width: 8, height: 1).frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 5) } }
-                }.frame(width: 34, height: 54).overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.aqua.opacity(0.35), lineWidth: 1))
+                }.frame(width: 34, height: 54).overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.weight.opacity(0.35), lineWidth: 1))
             }
         .accessibilityHidden(true)
     }
