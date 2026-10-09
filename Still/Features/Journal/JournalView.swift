@@ -155,7 +155,7 @@ struct SettingsView: View {
                         Section {
                             Button { tipping = true } label: { Label("Support Tendr", systemImage: "heart") }
                                 .accessibilityIdentifier("supportTendr")
-                        } footer: { Text("Optional tips. They unlock nothing.") }
+                        }
                     }
                     Section {
                         NavigationLink { PrivacyView() } label: { Label("Privacy & About", systemImage: "lock.shield") }

@@ -100,12 +100,9 @@ struct TipJarSheet: View {
             ScrollView {
                 VStack(spacing: 22) {
                     TendrMark().padding(.top, 8)
-                    VStack(spacing: 10) {
+                    VStack(spacing: 8) {
                         Text("Support Tendr").font(.title.bold())
-                        Text("Hi, I'm Calum. I make Tendr on my own: no ads, no accounts, and your journal never leaves your iPhone. If it has helped you, a tip helps keep it that way.")
-                            .multilineTextAlignment(.center).foregroundStyle(.secondary)
-                        Text("Tips are optional and unlock nothing. Every feature is free for everyone.")
-                            .font(.footnote).multilineTextAlignment(.center).foregroundStyle(.secondary)
+                        Text("Enjoying Tendr? Leave a tip.").foregroundStyle(.secondary)
                     }
                     VStack(spacing: 12) {
                         ForEach(TipJar.Tip.allCases) { tip in row(tip) }
@@ -114,8 +111,6 @@ struct TipJarSheet: View {
                         Text(notice).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
                             .accessibilityIdentifier("tipNotice")
                     }
-                    Text("Payments are handled by Apple. Tendr never sees your payment details.")
-                        .font(.caption).foregroundStyle(.tertiary).multilineTextAlignment(.center)
                 }.padding(20)
             }
             .background(Theme.background)
@@ -132,10 +127,7 @@ struct TipJarSheet: View {
         return HStack(spacing: 14) {
             Image(systemName: tip.symbol).font(.title3).foregroundStyle(Theme.pine)
                 .frame(width: 44, height: 44).background(Theme.sage, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-            VStack(alignment: .leading, spacing: 3) {
-                Text(product?.displayName ?? tip.fallbackName).font(.headline)
-                if let product, !product.description.isEmpty { Text(product.description).font(.caption).foregroundStyle(.secondary) }
-            }
+            Text(product?.displayName ?? tip.fallbackName).font(.headline)
             Spacer(minLength: 8)
             Button { Task { await jar.buy(tip) } } label: {
                 ZStack {
@@ -160,8 +152,6 @@ struct TipThanks: View {
             VStack(spacing: 18) {
                 TendrMark(size: 88)
                 Text("Thank you").font(.largeTitle.bold()).accessibilityIdentifier("tipThanks")
-                Text("Your \(tip.fallbackName.lowercased()) means a lot. It goes straight into keeping Tendr calm, private and independent.")
-                    .multilineTextAlignment(.center).foregroundStyle(.secondary)
                 Button { dismiss() } label: { Text("Close").font(.headline).foregroundStyle(Theme.background).frame(maxWidth: 240).padding(.vertical, 6) }
                     .buttonStyle(.borderedProminent).buttonBorderShape(.capsule).padding(.top, 8)
             }.padding(32)

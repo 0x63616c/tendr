@@ -18,7 +18,10 @@ final class TipJarTests: XCTestCase {
             XCTAssertTrue(button.label.contains(price), "\(id) should cost \(price), was \(button.label)")
             XCTAssertTrue(app.staticTexts[name].exists)
         }
-        XCTAssertTrue(app.staticTexts["Tips are optional and unlock nothing. Every feature is free for everyone."].exists)
+        XCTAssertTrue(app.staticTexts["Enjoying Tendr? Leave a tip."].exists)
+        // Minimal copy: no extra explanation or per-tip subtitles.
+        XCTAssertFalse(app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'unlock nothing'")).firstMatch.exists)
+        XCTAssertFalse(app.staticTexts["A small thank-you"].exists)
         app.buttons["Done"].tap()
         XCTAssertTrue(app.buttons["supportTendr"].waitForExistence(timeout: 5))
     }
