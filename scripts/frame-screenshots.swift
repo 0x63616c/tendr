@@ -14,18 +14,17 @@ struct Shot {
     var appearance = "light"
     let eyebrow: String
     let headline: String
-    let subtitle: String
 }
 
-/// Order is the App Store order: every main shot in dark, then a single light shot to close.
-/// The first three carry the listing. Subtitles break by hand so lines balance.
+/// Order is the App Store order, alternating dark and light. The first three carry the listing.
+/// Headlines only: short and big, breaking by hand so lines balance.
 let shots = [
-    Shot(screen: "home", appearance: "dark", eyebrow: "Dose & weight journal", headline: "A calm journal\nfor your treatment.", subtitle: "Doses, weight and progress together,\nkept privately on your iPhone."),
-    Shot(screen: "progress", appearance: "dark", eyebrow: "Progress", headline: "See how far\nyou've come.", subtitle: "Your weight trend, goal and weekly\nchange, drawn from your own entries."),
-    Shot(screen: "log-dose", appearance: "dark", eyebrow: "Logging", headline: "Log a dose\nin seconds.", subtitle: "The amount in mg, the time and\nan optional note. Nothing more."),
-    Shot(screen: "journal", appearance: "dark", eyebrow: "Journal", headline: "Your history,\nday by day.", subtitle: "Every dose and weigh-in in one tidy\ntimeline, filtered in a tap."),
-    Shot(screen: "settings", appearance: "dark", eyebrow: "Privacy", headline: "Private\nby design.", subtitle: "No account and no servers.\nApple Health weight is read-only."),
-    Shot(screen: "home", eyebrow: "Light & dark", headline: "Easy on the eyes,\nday or night.", subtitle: "Tendr follows your iPhone's light\nor dark appearance."),
+    Shot(screen: "home", appearance: "dark", eyebrow: "Dose & weight journal", headline: "A calm journal\nfor your treatment."),
+    Shot(screen: "progress", eyebrow: "Progress", headline: "See how far\nyou've come."),
+    Shot(screen: "log-dose", appearance: "dark", eyebrow: "Logging", headline: "Log a dose\nin seconds."),
+    Shot(screen: "journal", eyebrow: "Journal", headline: "Your history,\nday by day."),
+    Shot(screen: "settings", appearance: "dark", eyebrow: "Privacy", headline: "Private\nby design."),
+    Shot(screen: "home", eyebrow: "Light & dark", headline: "Easy on the eyes,\nday or night."),
 ]
 
 let canvas = CGSize(width: 1320, height: 2868)
@@ -36,8 +35,6 @@ enum Palette {
     static let mist = Color(red: 0.96, green: 0.96, blue: 0.98) // Theme.background (light)
     static let graphiteDark = Color(white: 0.72)                 // Graphite accent, dark
     static let graphiteLight = Color(white: 0.28)                // Graphite accent, light
-    static let mutedDark = Color(white: 0.63)
-    static let mutedLight = Color(white: 0.38)
 }
 
 struct Backdrop: View {
@@ -109,19 +106,13 @@ struct Frame: View {
                     .tracking(-1.6)
                     .lineSpacing(2)
                     .foregroundStyle(dark ? Palette.paper : Palette.ink)
-                    .padding(.top, 34)
-                Text(shot.subtitle)
-                    .font(.system(size: 44, weight: .regular))
-                    .lineSpacing(8)
-                    .foregroundStyle(dark ? Palette.mutedDark : Palette.mutedLight)
-                    .frame(maxWidth: 1060)
-                    .padding(.top, 34)
+                    .padding(.top, 30)
                 Device(screen: screen, width: 1100, dark: dark)
-                    .padding(.top, 84)
+                    .padding(.top, 120)
             }
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(.top, 148)
+            .padding(.top, 196)
             .frame(width: canvas.width, height: canvas.height, alignment: .top)
         }
         .frame(width: canvas.width, height: canvas.height)
