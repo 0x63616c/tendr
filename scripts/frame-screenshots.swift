@@ -41,7 +41,7 @@ struct Backdrop: View {
     var body: some View {
         ZStack {
             Palette.ink
-            RadialGradient(colors: [Palette.aqua.opacity(0.85), Palette.aqua.opacity(0.25), .clear], center: UnitPoint(x: 0.5, y: 0.62), startRadius: 0, endRadius: 1250)
+            RadialGradient(colors: [Palette.aqua.opacity(0.95), Palette.aqua.opacity(0.3), .clear], center: UnitPoint(x: 0.5, y: 0.6), startRadius: 0, endRadius: 1300)
             RadialGradient(colors: [Palette.mint.opacity(0.10), .clear], center: UnitPoint(x: 0.5, y: 0.02), startRadius: 0, endRadius: 820)
         }
     }
@@ -123,6 +123,11 @@ struct Frame: View {
             .fixedSize(horizontal: false, vertical: true)
             .padding(.top, 148)
             .frame(width: canvas.width, height: canvas.height, alignment: .top)
+            // The device runs off the bottom edge; fade it into the backdrop so the crop reads as intentional.
+            LinearGradient(colors: [Palette.ink.opacity(0), Palette.ink.opacity(0.92)], startPoint: .top, endPoint: .bottom)
+                .frame(height: 320)
+                .frame(maxHeight: .infinity, alignment: .bottom)
+                .allowsHitTesting(false)
         }
         .frame(width: canvas.width, height: canvas.height)
         .clipped()
