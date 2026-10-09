@@ -23,7 +23,7 @@ The local lane uses Xcode's release-Mac keychain/profile setup and allows provis
 
 ## App Store listing and screenshots
 
-The listing lives in `fastlane/metadata` (en-US copy, URLs, category, copyright, review notes). [App Store release](../.github/workflows/release.yml) is manual: run it from the Actions tab (optionally with a build number), or push a tag named `appstore-*`. It never builds or submits:
+The listing lives in `fastlane/metadata` (en-US copy, URLs, category, copyright, review notes). [App Store release](../.github/workflows/release.yml) is manual: run it from the Actions tab (optionally with a build number), or push a tag named `appstore-<version>-<build>` (for example `appstore-1.0.0-26` attaches build 26). It never builds or submits:
 
 1. [App Store screenshots](../.github/workflows/screenshots.yml) runs `scripts/capture-screenshots.sh` (a fresh iPhone 17 Pro Max simulator, 9:41 status bar, `AppStoreScreenshots` UI test against the synthetic `--screenshots` journal in `Still/ScreenshotFixture.swift`), then `swift scripts/frame-screenshots.swift` frames them at 1320 × 2868. Headlines live at the top of that script. Raw and framed PNGs are kept as workflow artifacts; `fastlane/screenshots` is generated and ignored by git.
 2. `bundle exec fastlane ios metadata` uploads the listing and screenshots with `deliver` (`submit_for_review: false`), sets the price to Free (all territories if availability was never set), and attaches the latest processed TestFlight build for 1.0.0 (or `build:N`).

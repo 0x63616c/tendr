@@ -9,6 +9,7 @@ on:
         description: 'TestFlight build number to attach (blank = latest processed 1.0.0 build)'
         type: string
         default: ''
+  # A tag such as appstore-1.0.0-26 also runs it and attaches build 26.
   push:
     tags: ['appstore-*']
 
@@ -66,4 +67,8 @@ jobs:
           ASC_REVIEW_EMAIL: ${{ secrets.ASC_REVIEW_EMAIL }}
           ASC_REVIEW_PHONE: ${{ secrets.ASC_REVIEW_PHONE }}
           BUILD: ${{ inputs.build }}
-        run: bundle exec fastlane ios metadata build:"$BUILD"
+        run: |
+          if [[ -z "$BUILD" && "$GITHUB_REF_TYPE" == "tag" && "${GITHUB_REF_NAME##*-}" =~ ^[0-9]+$ ]]; then
+            BUILD="${GITHUB_REF_NAME##*-}"
+          fi
+          bundle exec fastlane ios metadata build:"$BUILD"

@@ -34,8 +34,9 @@ final class AppStoreScreenshots: XCTestCase {
 
     @MainActor private func launch(dark: Bool) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["--screenshots", "--uitest", "-accentColor", "Graphite"] + (dark ? ["--dark"] : [])
+        app.launchArguments = ["--screenshots", "--demo", "--uitest", "-accentColor", "Graphite"] + (dark ? ["--dark"] : [])
         app.launch()
+        XCTAssertFalse(app.buttons["acknowledgeDisclaimer"].waitForExistence(timeout: 2), "The first-launch disclaimer must not appear in screenshots")
         return app
     }
 
