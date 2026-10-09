@@ -46,6 +46,7 @@
 		033134A7B3BB4B6F478EA308 /* Journal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Journal.swift; sourceTree = "<group>"; };
 		03E0EFE505FE380DEF4BEB01 /* HealthKitWeightStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitWeightStore.swift; sourceTree = "<group>"; };
 		14C4753ACE9F975EC7EF42BA /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B7E1A9C04D2F4A6E8C3B5D01 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		17C74C889016FEBBA601994F /* TreatmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TreatmentView.swift; sourceTree = "<group>"; };
 		193593C1E058E2D289F796C2 /* Still.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Still.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2087DBA256BFFEE06713F93D /* Editors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Editors.swift; sourceTree = "<group>"; };
@@ -94,6 +95,7 @@
 			children = (
 				D5B2539898EB583763A28A42 /* Assets.xcassets */,
 				03E0EFE505FE380DEF4BEB01 /* HealthKitWeightStore.swift */,
+				B7E1A9C04D2F4A6E8C3B5D01 /* Info.plist */,
 				14C4753ACE9F975EC7EF42BA /* PrivacyInfo.xcprivacy */,
 				A7D41C2E9B3F5E6A8C0D1F01 /* ScreenshotFixture.swift */,
 				FB03B665E58BD3106E23CE0D /* Still.entitlements */,
@@ -417,7 +419,7 @@
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Tendr reads your body weight so your progress stays up to date.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Tendr does not write data to Apple Health. Body weight access is read-only.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_FILE = Still/Info.plist;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -519,7 +521,7 @@
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Tendr reads your body weight so your progress stays up to date.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Tendr does not write data to Apple Health. Body weight access is read-only.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_FILE = Still/Info.plist;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
