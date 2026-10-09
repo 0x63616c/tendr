@@ -1,8 +1,8 @@
 # App Store readiness plan
 
-> **Status: Phase 1 (app fixes) done on 2026-10-09 (PT).**
+> **Status: Phases 1–4 done on 2026-10-09 (PT).**
 > Decisions: **mg-only dose entry for 1.0** (option A for blocker 3). Privacy and support pages are live at <https://0x63616c.github.io/tendr/privacy/> and <https://0x63616c.github.io/tendr/support/> (source in `site/`, published with `scripts/publish-site.sh`).
-> Next: Phases 2–4 (screenshots, listing as code, release workflow). See [Progress](#progress).
+> Screenshots, listing and the `App Store release` workflow are in place ([RELEASE.md](RELEASE.md#app-store-review-preparation)). Next: Phase 5. Calum completes Age Rating, App Privacy and the review phone number in App Store Connect, then presses **Submit for Review**.
 
 ## Progress
 
@@ -16,8 +16,13 @@
 - [x] "Still backup" → "Tendr backup" (`Tracking.swift`).
 - [x] ~~Drop `NSHealthUpdateUsageDescription`~~ **Reverted:** App Store Connect rejects an upload without it (409 "Missing purpose string") because of the HealthKit entitlement, even though the app only reads. Keep it.
 - [x] Build number resynced to 17 in `project.yml` and `Still.xcodeproj`.
-- [ ] CSV/JSON export, a better icon, reviewer notes.
-- [ ] Phases 2–5.
+- [x] Reviewer notes (`fastlane/metadata/review_information/notes.txt`).
+- [x] **Phase 2:** `--demo --screenshots` fixture (`Still/ScreenshotFixture.swift`), `StillUITests/ScreenshotTests`, `scripts/capture-screenshots.sh` (iPhone 17 Pro Max, 9:41 status bar, light and dark) and SwiftUI marketing frames (`scripts/frame-screenshots.swift`).
+- [x] **Phase 3:** listing as code in `fastlane/metadata`, uploaded by `fastlane ios metadata`.
+- [x] **Phase 4:** `.github/workflows/release.yml` → `fastlane ios prepare_review` (listing, screenshots, Free pricing, latest processed build). It stops before Submit.
+- [ ] CSV/JSON export, a better icon.
+- [ ] Phase 5: Age Rating, App Privacy, review phone number, Submit for Review.
+- Screenshot note: the Treatment tab icon is a syringe and the Treatment screen has a Vials section, so the screenshots crop the tab bar and leave out Treatment. Home still shows the "Add vial" tile and Log Dose shows a "No vial" picker.
 - Open question: the home screen still shows the vial card ("Add vial"), and vials store mg/mL concentration. That's an inventory feature, not a calculator, but consider hiding it for 1.0 if review pushes back.
 
 Goal: get Tendr through App Store review the first time. That means a professional listing, automated screenshots, and a release pipeline that stops just before **Submit for Review**, so Calum presses the button himself.
