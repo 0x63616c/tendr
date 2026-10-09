@@ -1,8 +1,12 @@
+import StoreKitTest
 import XCTest
 
-/// The optional tip jar, against the local StoreKit configuration (Tendr.storekit) attached to
-/// the scheme. With `TEST_RUNNER_SCREENSHOT_DIR` set, key states are also written as PNGs.
+/// The optional tip jar, against Tendr.storekit through an SKTestSession (xcodebuild ignores the
+/// scheme's StoreKit configuration for UI tests). Dialogs are disabled, so purchases complete
+/// without the system sheet. With `TEST_RUNNER_SCREENSHOT_DIR` set, key states are written as PNGs.
 final class TipJarTests: XCTestCase {
+    private var session: SKTestSession?
+
     override func setUp() { continueAfterFailure = false }
 
     @MainActor func testSupportRowShowsThreeTipsAtTheirPrices() {
@@ -19,11 +23,10 @@ final class TipJarTests: XCTestCase {
         XCTAssertTrue(app.buttons["supportTendr"].waitForExistence(timeout: 5))
     }
 
-    @MainActor func testTipPurchaseCelebratesThenCloses() {
+    @MainActor func testTipPurchaseCelebratesThenCloses() throws {
         let app = launch()
         openTipJar(app)
         app.buttons["tip-small"].tap()
-        confirmPurchase(in: app)
         let thanks = app.staticTexts["tipThanks"]
         XCTAssertTrue(thanks.waitForExistence(timeout: 20), "A completed tip shows the thank-you")
         // Mid-burst: the cannons fire as the cover appears.
@@ -34,15 +37,24 @@ final class TipJarTests: XCTestCase {
         XCTAssertFalse(thanks.exists)
     }
 
-    @MainActor func testCancelledTipSaysNothing() {
-        let app = launch()
+    @MainActor func testFailedTipExplainsCalmly() throws {
+        let app = launch { $0.failTransactionsEnabled = true }
         openTipJar(app)
         app.buttons["tip-medium"].tap()
-        confirmPurchase(in: app, cancel: true)
-        XCTAssertTrue(app.buttons["tip-medium"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.buttons["tip-medium"].isEnabled)
+        XCTAssertTrue(app.staticTexts["tipNotice"].waitForExistence(timeout: 15))
         XCTAssertFalse(app.staticTexts["tipThanks"].exists)
-        XCTAssertFalse(app.staticTexts["tipNotice"].exists, "Cancelling is not an error")
+        XCTAssertTrue(app.buttons["tip-medium"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["tip-medium"].isEnabled, "A failed tip can be tried again")
+    }
+
+    @MainActor func testPendingTipWaitsQuietly() throws {
+        let app = launch { $0.askToBuyEnabled = true }
+        openTipJar(app)
+        app.buttons["tip-large"].tap()
+        let notice = app.staticTexts["tipNotice"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 15))
+        XCTAssertTrue(notice.label.contains("waiting for approval"))
+        XCTAssertFalse(app.staticTexts["tipThanks"].exists)
     }
 
     @MainActor func testThankYouCloses() {
@@ -55,7 +67,17 @@ final class TipJarTests: XCTestCase {
 
     // MARK: - Helpers
 
-    @MainActor private func launch(extra: [String] = []) -> XCUIApplication {
+    @MainActor private func launch(extra: [String] = [], configure: (SKTestSession) -> Void = { _ in }) -> XCUIApplication {
+        do {
+            let session = try SKTestSession(configurationFileNamed: "Tendr")
+            session.resetToDefaultState()
+            session.disableDialogs = true
+            session.clearTransactions()
+            configure(session)
+            self.session = session
+        } catch {
+            XCTFail("Could not start the StoreKit test session: \(error)")
+        }
         let app = XCUIApplication()
         app.launchArguments = ["--demo", "--uitest", "-accentColor", "Graphite"] + extra
         app.launch()
@@ -72,31 +94,6 @@ final class TipJarTests: XCTestCase {
         row.tap()
         XCTAssertTrue(app.buttons["tip-small"].waitForExistence(timeout: 5))
         if capture { snap("tip-sheet", after: 1) }
-    }
-
-    /// StoreKit testing shows the system purchase sheet out of process.
-    @MainActor private func confirmPurchase(in app: XCUIApplication, cancel: Bool = false) {
-        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let labels = cancel ? ["Cancel", "Close"] : ["Purchase", "Buy", "Confirm", "Pay", "Subscribe", "OK"]
-        let deadline = Date().addingTimeInterval(20)
-        while Date() < deadline {
-            for source in [springboard, app] {
-                for label in labels {
-                    let button = source.buttons[label]
-                    if button.exists && button.isHittable {
-                        if !cancel { snap("purchase-sheet", after: 0.3) }
-                        button.tap()
-                        return
-                    }
-                }
-            }
-            Thread.sleep(forTimeInterval: 0.5)
-        }
-        let tree = XCTAttachment(string: springboard.debugDescription + "\n\n" + app.debugDescription)
-        tree.name = "hierarchies"
-        tree.lifetime = .keepAlways
-        add(tree)
-        XCTFail("No StoreKit purchase sheet appeared")
     }
 
     @MainActor private func snap(_ name: String, after delay: TimeInterval) {

@@ -31,7 +31,6 @@ jobs:
           xcrun simctl bootstatus "$udid" -b >/dev/null
           xcodebuild build-for-testing -project Still.xcodeproj -scheme Still -destination "id=$udid" \
             -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO -quiet
-          for run in build/DerivedData/Build/Products/*.xctestrun; do echo "$run"; plutil -convert xml1 -o - "$run" | grep -i -A2 storekit || echo "no StoreKit key"; done
       - name: Tip jar UI tests (dark and light), with screenshots
         run: |
           for appearance in dark light; do
@@ -39,7 +38,7 @@ jobs:
             xcrun simctl status_bar "$UDID" override --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
               --cellularMode active --cellularBars 4 --operatorName "" --batteryState discharging --batteryLevel 100
             mkdir -p "build/tip-jar/$appearance"
-            TEST_RUNNER_SCREENSHOT_DIR="$PWD/build/tip-jar/$appearance" xcodebuild test CODE_SIGNING_ALLOWED=NO \
+            TEST_RUNNER_SCREENSHOT_DIR="$PWD/build/tip-jar/$appearance" xcodebuild test-without-building \
               -project Still.xcodeproj -scheme Still -destination "id=$UDID" -derivedDataPath build/DerivedData \
               -only-testing:StillUITests/TipJarTests -resultBundlePath "build/tip-jar/TipJarTests-$appearance.xcresult" 2>&1 \
               | grep -E "Test Case|error:|failed|TEST (SUCC|FAIL)" || true
