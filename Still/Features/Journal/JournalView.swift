@@ -175,7 +175,7 @@ struct SettingsView: View {
                     }
                     Section {
                         NavigationLink { PrivacyView() } label: { Label("Privacy & About", systemImage: "lock.shield") }
-                    } footer: { Text("Tendr · 1.0").frame(maxWidth: .infinity).padding(.top, 12) }
+                    } footer: { Text("Tendr · \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")").frame(maxWidth: .infinity).padding(.top, 12) }
                 }.scrollContentBackground(.hidden)
             }.background(Theme.background).toolbar(.hidden, for: .navigationBar)
                 .task {
