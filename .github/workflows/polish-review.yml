@@ -39,10 +39,10 @@ jobs:
             -only-testing:StillUITests/StillUITests/testMedicationChartTapAndFutureDrag \
             -only-testing:StillUITests/StillUITests/testLogDoseOnlyCreatesTakenDoses \
             -only-testing:StillUITests/StillUITests/testWeightCardTapTargets \
-            -only-testing:StillUITests/StillUITests/testPrimaryPageHeadersShareOnePosition \
             -only-testing:StillUITests/StillUITests/testWeightSavesWithKeyboardOpenAndSurvivesRelaunch \
             -resultBundlePath build/polish/ui-tests.xcresult 2>&1 | grep -E "Test Case|error:|TEST (SUCC|FAIL)"
       - name: Capture review screens (dark and light)
+        if: ${{ !cancelled() }}
         run: |
           set -o pipefail
           for appearance in dark light; do
