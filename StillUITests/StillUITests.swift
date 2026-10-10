@@ -143,6 +143,99 @@ final class StillUITests: XCTestCase {
         app.buttons["Treatment"].tap()
         XCTAssertTrue(app.buttons["Add Vial"].waitForExistence(timeout: 5))
     }
+    @MainActor func testSettingsExplainsRowsWithInfoButtonsInsteadOfFooters() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo", "--uitest"]
+        app.launch()
+        app.buttons["Settings"].tap()
+        XCTAssertTrue(app.staticTexts["pageHeader-Settings"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Read-only. Tendr never writes to Apple Health."].exists)
+        XCTAssertFalse(app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'Removes'")).firstMatch.exists)
+
+        app.buttons["appleHealthInfo"].tap()
+        let popover = app.staticTexts["infoPopover"]
+        XCTAssertTrue(popover.waitForExistence(timeout: 5))
+        XCTAssertTrue(popover.label.contains("Read-only"))
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.08)).tap()
+        XCTAssertTrue(popover.waitForNonExistence(timeout: 5))
+
+        app.buttons["firstDoseWeightsInfo"].tap()
+        XCTAssertTrue(popover.waitForExistence(timeout: 5))
+        XCTAssertTrue(popover.label.contains("first dose"))
+    }
+    @MainActor func testWeightTrendModeAppliesToProgress() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo", "--uitest"]
+        app.launch()
+        app.buttons["Progress"].tap()
+        let caption = app.staticTexts["weightTrendCaption"]
+        for _ in 0..<3 where !caption.exists { app.swipeUp() }
+        XCTAssertEqual(caption.label, "7-day average")
+
+        app.buttons["Settings"].tap()
+        app.buttons["Weight trend, 7-day average"].tap()
+        XCTAssertTrue(app.buttons["Smoothed trend"].waitForExistence(timeout: 5))
+        for title in ["Raw readings", "14-day average", "30-day average", "Weekly average"] { XCTAssertTrue(app.buttons[title].exists, title) }
+        app.buttons["Smoothed trend"].tap()
+        XCTAssertTrue(app.buttons["Weight trend, Smoothed trend"].waitForExistence(timeout: 5))
+
+        app.buttons["Progress"].tap()
+        for _ in 0..<3 where !caption.exists { app.swipeUp() }
+        XCTAssertEqual(caption.label, "Smoothed trend")
+    }
+    @MainActor func testNotePlaceholderInvitesATap() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo", "--uitest"]
+        app.launch()
+        app.buttons["Progress"].tap()
+        app.buttons["Log weight"].tap()
+        XCTAssertTrue(app.textFields["weightAmount"].waitForExistence(timeout: 5))
+        let note = app.descendants(matching: .any)["noteField"]
+        XCTAssertFalse(note.exists, "An empty note stays collapsed")
+        app.buttons["Note"].tap()
+        XCTAssertTrue(note.waitForExistence(timeout: 5))
+        XCTAssertEqual(note.placeholderValue, "Tap to add a note…")
+    }
+    @MainActor func testNotesShowWhenTheyExist() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo", "--uitest"]
+        app.launch()
+        app.buttons["Journal"].tap()
+        let weightNote = "Feeling more like myself. A long walk this morning."
+        let weightRow = app.staticTexts[weightNote]
+        XCTAssertTrue(weightRow.waitForExistence(timeout: 5), "Journal rows show their note")
+        weightRow.tap()
+        let field = app.descendants(matching: .any)["noteField"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "An existing note opens expanded")
+        XCTAssertEqual(field.value as? String, weightNote)
+        app.buttons["Cancel"].tap()
+
+        app.buttons["Doses"].tap()
+        let doseNote = "Easy morning. Keeping water close today."
+        XCTAssertTrue(app.staticTexts[doseNote].waitForExistence(timeout: 5))
+        app.staticTexts[doseNote].tap()
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        XCTAssertEqual(field.value as? String, doseNote)
+    }
+    @MainActor func testMedicationScrubResetsWhenThePageReappears() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo", "--uitest"]
+        app.launch()
+        let homeChart = app.descendants(matching: .any).matching(identifier: "medicationChart").firstMatch
+        XCTAssertTrue(homeChart.waitForExistence(timeout: 10))
+        homeChart.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+        let detailChart = app.descendants(matching: .any).matching(identifier: "medicationDetailChart").firstMatch
+        XCTAssertTrue(detailChart.waitForExistence(timeout: 5))
+        detailChart.coordinate(withNormalizedOffset: CGVector(dx: 0.72, dy: 0.5))
+            .press(forDuration: 0.2, thenDragTo: detailChart.coordinate(withNormalizedOffset: CGVector(dx: 0.4, dy: 0.5)))
+        XCTAssertTrue(app.buttons["Live"].waitForExistence(timeout: 3), "Scrubbing selects a past time")
+
+        app.buttons["Progress"].tap()
+        XCTAssertTrue(app.staticTexts["pageHeader-Progress"].waitForExistence(timeout: 5))
+        app.buttons["Home"].tap()
+        XCTAssertTrue(detailChart.waitForExistence(timeout: 5), "Returning to Home keeps the Medication page open")
+        XCTAssertFalse(app.buttons["Live"].waitForExistence(timeout: 2), "The graph is back at now, not the old scrub position")
+    }
     @MainActor func testWeightSavesWithKeyboardOpenAndSurvivesRelaunch() {
         let app = XCUIApplication()
         app.launchArguments = ["--uitest", "--reset-test-journal"]
@@ -302,7 +395,7 @@ final class StillUITests: XCTestCase {
         app.buttons["Progress"].tap()
         let currentWeight = app.descendants(matching: .any).matching(identifier: "currentWeightCard").firstMatch
         XCTAssertTrue(currentWeight.waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Latest recorded weight"].exists)
+        XCTAssertFalse(app.staticTexts["Latest recorded weight"].exists)
         XCTAssertTrue(app.staticTexts["195.1"].exists)
         XCTAssertTrue(app.staticTexts["WEIGHT TREND"].exists)
         XCTAssertTrue(app.staticTexts["7-day average"].exists)

@@ -84,7 +84,7 @@ struct TodayView: View {
                                     }
                                     Text("Latest").font(.caption).foregroundStyle(.secondary)
                                 }
-                                WeightChart(entries: homeWeights, unit: store.journal.unit, compact: true).frame(height: 65).allowsHitTesting(false)
+                                WeightChart(entries: homeWeights, unit: store.journal.unit, compact: true, mode: store.journal.weightTrend).frame(height: 65).allowsHitTesting(false)
                             }
                             Divider()
                             HStack {
@@ -127,29 +127,8 @@ struct WeightChart: View {
     @State private var selected: Date?
     var compact = false
     var sorted: [WeightEntry] { entries.sorted { $0.date < $1.date } }
-    var trend: [WeightEntry] {
-        let readings = sorted
-        var start = 0
-        var end = 0
-        var sum = 0.0
-        var averages: [WeightEntry] = []
-        for reading in readings {
-            let lower = reading.date.addingTimeInterval(-3.5 * 86400)
-            let upper = reading.date.addingTimeInterval(3.5 * 86400)
-            while end < readings.count && readings[end].date <= upper {
-                sum += readings[end].kilograms
-                end += 1
-            }
-            while start < end && readings[start].date < lower {
-                sum -= readings[start].kilograms
-                start += 1
-            }
-            var averaged = reading
-            averaged.kilograms = sum / Double(end - start)
-            averages.append(averaged)
-        }
-        return averages
-    }
+    var mode = WeightTrendMode.default
+    var trend: [WeightEntry] { mode.trend(entries) }
     var bounds: ClosedRange<Double> {
         let values = sorted.map { unit.display($0.kilograms) }
         return ((values.min() ?? 0) - 1)...((values.max() ?? 1) + 1)
@@ -158,8 +137,8 @@ struct WeightChart: View {
         Chart {
             ForEach(trend) { entry in
                 AreaMark(x: .value("Date", entry.date), yStart: .value("Base", bounds.lowerBound), yEnd: .value("Weight", unit.display(entry.kilograms)))
-                    .foregroundStyle(LinearGradient(colors: [Theme.weight.opacity(0.18), Theme.weight.opacity(0.01)], startPoint: .top, endPoint: .bottom)).interpolationMethod(.catmullRom)
-                LineMark(x: .value("Date", entry.date), y: .value("Weight", unit.display(entry.kilograms))).foregroundStyle(Theme.weight).lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round)).interpolationMethod(.catmullRom)
+                    .foregroundStyle(LinearGradient(colors: [Theme.weight.opacity(0.18), Theme.weight.opacity(0.01)], startPoint: .top, endPoint: .bottom)).interpolationMethod(interpolation)
+                LineMark(x: .value("Date", entry.date), y: .value("Weight", unit.display(entry.kilograms))).foregroundStyle(Theme.weight).lineStyle(StrokeStyle(lineWidth: mode == .raw ? 1.5 : 2.5, lineCap: .round, lineJoin: .round)).interpolationMethod(interpolation)
             }
             ForEach(sorted) { entry in
                 PointMark(x: .value("Date", entry.date), y: .value("Weight", unit.display(entry.kilograms))).foregroundStyle(Theme.weight).symbolSize(compact ? 16 : 45)
@@ -171,8 +150,10 @@ struct WeightChart: View {
             .chartXScale(range: .plotDimension(padding: compact ? 4 : 20))
             .chartXAxis { if !compact { AxisMarks(values: .automatic(desiredCount: 4)) { _ in AxisValueLabel(format: .dateTime.month(.abbreviated).day()) } } }
             .chartYAxis { if !compact { AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { _ in AxisGridLine().foregroundStyle(.gray.opacity(0.12)); AxisValueLabel() } } }
-            .accessibilityLabel("Weight history in \(unit.symbol): seven-day trend and recorded weigh-ins")
+            .accessibilityLabel("Weight history in \(unit.symbol): \(mode.title.lowercased()) and recorded weigh-ins")
     }
+    /// Curves suit averages; raw readings join point to point so nothing is invented between them.
+    private var interpolation: InterpolationMethod { mode == .raw ? .linear : .catmullRom }
 }
 
 struct ProgressViewScreen: View {
@@ -200,7 +181,6 @@ struct ProgressViewScreen: View {
                         } else {
                             Text("No weight recorded").font(.subheadline).foregroundStyle(.secondary)
                         }
-                        Text("Latest recorded weight").font(.caption).foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity, alignment: .leading).card().accessibilityIdentifier("currentWeightCard")
                     GoalCard()
                     Text("Weight").font(.title.bold())
@@ -213,10 +193,10 @@ struct ProgressViewScreen: View {
                         HStack {
                             Text("WEIGHT TREND").font(.caption.bold()).tracking(1.5).foregroundStyle(.secondary)
                             Spacer()
-                            Text("7-day average").font(.caption).foregroundStyle(.secondary)
+                            Text(store.journal.weightTrend.title).font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("weightTrendCaption")
                         }
                         if summary.latest != nil {
-                            WeightChart(entries: entries, unit: store.journal.unit).frame(height: 220)
+                            WeightChart(entries: entries, unit: store.journal.unit, mode: store.journal.weightTrend).frame(height: 220)
                         } else { ContentUnavailableView("Your story starts here", systemImage: "chart.xyaxis.line", description: Text("Add a weight entry to see your history.")) }
                     }.card()
                     HStack(spacing: 14) {
