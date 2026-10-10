@@ -102,6 +102,9 @@ struct SettingsView: View {
     @State private var treatment = false
     @State private var addingVial = false
     @State private var editingVial: Vial?
+    @State private var tipJar = TipJar.shared
+    @State private var tipping = false
+    @State private var thanks: TipJar.Tip?
     var body: some View {
         @Bindable var accents = Theme.preferences
         NavigationStack {
@@ -164,11 +167,27 @@ struct SettingsView: View {
                             LabeledContent("First dose") { Text(firstDoseDate, format: .dateTime.month(.abbreviated).day().year()) }
                         }
                     } header: { Text("Weight history") }
+                    if tipJar.phase == .ready {
+                        Section {
+                            Button { tipping = true } label: { Label("Support Tendr", systemImage: "heart") }
+                                .accessibilityIdentifier("supportTendr")
+                        }
+                    }
                     Section {
                         NavigationLink { PrivacyView() } label: { Label("Privacy & About", systemImage: "lock.shield") }
                     } footer: { Text("Tendr · 1.0").frame(maxWidth: .infinity).padding(.top, 12) }
                 }.scrollContentBackground(.hidden)
             }.background(Theme.background).toolbar(.hidden, for: .navigationBar)
+                .task {
+                    await tipJar.load()
+                    let arguments = ProcessInfo.processInfo.arguments
+                    if arguments.contains("--uitest"), arguments.contains("--tip-thanks") { thanks = .medium }
+                }
+                .sheet(isPresented: $tipping, onDismiss: {
+                    thanks = tipJar.completed
+                    tipJar.completed = nil
+                }) { TipJarSheet(jar: tipJar) }
+                .fullScreenCover(item: $thanks) { TipThanks(tip: $0) }
                 .sheet(isPresented: $schedule) { ScheduleEditor() }
                 .sheet(isPresented: $treatment) { DosePreferencesEditor() }
                 .sheet(isPresented: $addingVial) { VialEditor() }

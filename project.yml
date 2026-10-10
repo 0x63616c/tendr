@@ -32,7 +32,10 @@ targets:
   StillUITests:
     type: bundle.ui-testing
     platform: iOS
-    sources: [StillUITests]
+    sources:
+      - StillUITests
+      - path: Tendr.storekit
+        buildPhase: resources
     dependencies:
       - target: Still
     settings:
@@ -44,5 +47,7 @@ schemes:
       targets:
         Still: all
         StillUITests: [test]
+    run:
+      storeKitConfiguration: Tendr.storekit
     test:
       targets: [StillUITests]
