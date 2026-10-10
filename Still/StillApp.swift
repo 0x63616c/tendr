@@ -41,7 +41,9 @@ struct PageHeader<Trailing: View>: View {
                 .font(.largeTitle.bold())
                 .accessibilityIdentifier("pageHeader-\(title)")
             Spacer()
-            trailing
+            // Taller trailing controls (Progress uses a 52 pt add button) lay out at 44 pt and
+            // overflow evenly, so every page title sits at the same position.
+            trailing.frame(maxHeight: 44)
         }.frame(minHeight: 44)
     }
 }
