@@ -84,7 +84,9 @@ struct JournalView: View {
         VStack(alignment: .leading, spacing: 5) {
             Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
             Text(subtitle).font(.caption).foregroundStyle(.secondary)
-
+            if !note.isEmpty {
+                Text(note).font(.caption).foregroundStyle(.secondary).lineLimit(3).accessibilityIdentifier("journalNote")
+            }
         }
     }
 }

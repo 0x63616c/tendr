@@ -1,7 +1,8 @@
 import XCTest
 
 /// Review captures for the 1.0.1 polish: Settings info buttons and trend option, the trend picker,
-/// Progress in two trend modes, and the note field. PNGs go to `TEST_RUNNER_SCREENSHOT_DIR`.
+/// Progress in several trend modes, notes (empty and expanded), and the Medication graph resetting
+/// to now after it was scrubbed and the page reappeared. PNGs go to `TEST_RUNNER_SCREENSHOT_DIR`.
 final class PolishScreenshots: XCTestCase {
     @MainActor func testCaptureReviewScreens() {
         continueAfterFailure = false
@@ -35,8 +36,36 @@ final class PolishScreenshots: XCTestCase {
         app.buttons["Log weight"].tap()
         XCTAssertTrue(app.textFields["weightAmount"].waitForExistence(timeout: 5))
         app.buttons["Note"].tap()
-        XCTAssertTrue(app.textFields.matching(NSPredicate(format: "placeholderValue == %@", "Tap to add a note…")).firstMatch.waitForExistence(timeout: 5))
-        snap("09-note-field")
+        XCTAssertTrue(app.descendants(matching: .any)["noteField"].waitForExistence(timeout: 5))
+        snap("09-note-field-empty")
+        app.buttons["Cancel"].tap()
+
+        // Notes that exist show in the Journal and open expanded.
+        app.tabBars.buttons["Journal"].tap()
+        let note = app.staticTexts["journalNote"].firstMatch
+        XCTAssertTrue(note.waitForExistence(timeout: 5))
+        snap("10-journal-with-notes")
+        note.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["noteField"].waitForExistence(timeout: 5))
+        snap("11-note-expanded")
+        app.buttons["Cancel"].tap()
+
+        // Scrub the Medication graph, leave, and come back: it is live at now again.
+        app.tabBars.buttons["Home"].tap()
+        let homeChart = app.descendants(matching: .any).matching(identifier: "medicationChart").firstMatch
+        XCTAssertTrue(homeChart.waitForExistence(timeout: 5))
+        homeChart.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+        let detailChart = app.descendants(matching: .any).matching(identifier: "medicationDetailChart").firstMatch
+        XCTAssertTrue(detailChart.waitForExistence(timeout: 5))
+        detailChart.coordinate(withNormalizedOffset: CGVector(dx: 0.72, dy: 0.5))
+            .press(forDuration: 0.2, thenDragTo: detailChart.coordinate(withNormalizedOffset: CGVector(dx: 0.4, dy: 0.5)))
+        XCTAssertTrue(app.buttons["Live"].waitForExistence(timeout: 3))
+        snap("12-medication-scrubbed")
+        app.tabBars.buttons["Progress"].tap()
+        app.tabBars.buttons["Home"].tap()
+        XCTAssertTrue(detailChart.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Live"].waitForExistence(timeout: 2))
+        snap("13-medication-back-at-now")
     }
 
     /// Optionally switches the trend mode in Settings, then shows the Progress chart.

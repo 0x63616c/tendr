@@ -34,6 +34,10 @@ jobs:
             -only-testing:StillUITests/StillUITests/testSettingsExplainsRowsWithInfoButtonsInsteadOfFooters \
             -only-testing:StillUITests/StillUITests/testWeightTrendModeAppliesToProgress \
             -only-testing:StillUITests/StillUITests/testNotePlaceholderInvitesATap \
+            -only-testing:StillUITests/StillUITests/testNotesShowWhenTheyExist \
+            -only-testing:StillUITests/StillUITests/testMedicationScrubResetsWhenThePageReappears \
+            -only-testing:StillUITests/StillUITests/testMedicationChartTapAndFutureDrag \
+            -only-testing:StillUITests/StillUITests/testLogDoseOnlyCreatesTakenDoses \
             -only-testing:StillUITests/StillUITests/testWeightCardTapTargets \
             -only-testing:StillUITests/StillUITests/testPrimaryPageHeadersShareOnePosition \
             -only-testing:StillUITests/StillUITests/testWeightSavesWithKeyboardOpenAndSurvivesRelaunch \

@@ -7,6 +7,8 @@ struct WeightEditor: View {
     @State private var amount = ""
     @State private var date = Date()
     @State private var note = ""
+    /// Open when an existing note has text; empty notes stay tucked away behind the placeholder.
+    @State private var noteExpanded = false
     @State private var unit: WeightUnit = .lb
     @State private var localError: String?
     var kilograms: Double? { parse(amount).map { unit.kilograms($0) } }
@@ -24,7 +26,7 @@ struct WeightEditor: View {
                     VStack(alignment: .leading, spacing: 16) {
                         DatePicker("Date", selection: $date)
                         if date > Date() { Label("Future entry · excluded from current trends", systemImage: "calendar").font(.caption).foregroundStyle(.secondary) }
-                        DisclosureGroup("Note") { TextField("Tap to add a note…", text: $note, axis: .vertical).lineLimit(2...5) }
+                        DisclosureGroup("Note", isExpanded: $noteExpanded) { TextField("Tap to add a note…", text: $note, axis: .vertical).lineLimit(2...5).accessibilityIdentifier("noteField") }
                     }.card()
                     if let localError { Text(localError).font(.footnote).foregroundStyle(.red) }
                     Button {
@@ -39,7 +41,7 @@ struct WeightEditor: View {
                     ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                     if let entry { ToolbarItem(placement: .topBarTrailing) { DeleteEntryButton { store.delete(weight: entry) } } }
                 }
-                .onAppear { unit = store.journal.unit; if let entry { amount = unit.display(entry.kilograms).formatted(.number.grouping(.never).precision(.fractionLength(0...8))); date = entry.date; note = entry.note } }
+                .onAppear { unit = store.journal.unit; if let entry { amount = unit.display(entry.kilograms).formatted(.number.grouping(.never).precision(.fractionLength(0...8))); date = entry.date; note = entry.note }; noteExpanded = !note.isEmpty }
         }
     }
 }
@@ -52,6 +54,8 @@ struct DoseEditor: View {
     @State private var initialized = false
     @State private var date = Date()
     @State private var note = ""
+    /// Open when an existing note has text; empty notes stay tucked away behind the placeholder.
+    @State private var noteExpanded = false
     @State private var status = DoseEntry.Status.taken
     @State private var mode = "mg"
     @State private var vialID: UUID?
@@ -116,7 +120,7 @@ struct DoseEditor: View {
                         } else {
                             DatePicker(status == .planned ? "Planned for" : status == .skipped ? "Skipped date" : "Taken at", selection: $date)
                         }
-                        DisclosureGroup("Note") { TextField("Tap to add a note…", text: $note, axis: .vertical).lineLimit(2...5) }
+                        DisclosureGroup("Note", isExpanded: $noteExpanded) { TextField("Tap to add a note…", text: $note, axis: .vertical).lineLimit(2...5).accessibilityIdentifier("noteField") }
                     }.card()
                     if let localError { Text(localError).font(.footnote).foregroundStyle(.red) }
 
@@ -139,6 +143,7 @@ struct DoseEditor: View {
                     } else { vialID = store.journal.vials.sorted { $0.received > $1.received }.first?.id; mode = store.journal.doseInputUnit ?? (confirmedU100 && vialID != nil ? "units" : "mg") }
                     // mg-only entry: entries recorded in units or mL open showing their stored mg.
                     if !FeatureFlags.syringeUnits { mode = "mg"; if let entry { amount = number(entry.milligrams, digits: 4) } }
+                    noteExpanded = !note.isEmpty
                 }
         }
     }
