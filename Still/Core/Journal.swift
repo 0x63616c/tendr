@@ -16,6 +16,7 @@ public struct Journal: Codable, Equatable, Sendable {
     public var medicationModel: MedicationModel?
     public var resolvedMedicationModel: MedicationModel { medicationModel ?? MedicationModel.inferred(from: medication) }
     public var appearance = "system"
+    public var weightTrend = WeightTrendMode.default
     public var healthKitWeightsEnabled = false
     public var lastHealthKitSync: Date?
     public var weightsStartAtFirstDose = false
@@ -27,7 +28,7 @@ public struct Journal: Codable, Equatable, Sendable {
     public var unit: WeightUnit = .lb
     public var schedule = DoseSchedule()
     public init() {}
-    private enum CodingKeys: String, CodingKey { case medicationModel, doseInputUnit, version, goal, vials, syringeUnitsPerML, halfLifeDays, appearance, healthKitWeightsEnabled, lastHealthKitSync, weightsStartAtFirstDose, weights, doses, medication, concentration, containerML, unit, schedule }
+    private enum CodingKeys: String, CodingKey { case medicationModel, doseInputUnit, version, goal, vials, syringeUnitsPerML, halfLifeDays, appearance, weightTrend, healthKitWeightsEnabled, lastHealthKitSync, weightsStartAtFirstDose, weights, doses, medication, concentration, containerML, unit, schedule }
     public init(from decoder: Decoder) throws {
         self.init()
         let values = try decoder.container(keyedBy: CodingKeys.self)
@@ -40,6 +41,8 @@ public struct Journal: Codable, Equatable, Sendable {
         if let value = try values.decodeIfPresent(Double.self, forKey: .syringeUnitsPerML) { syringeUnitsPerML = value }
         if let value = try values.decodeIfPresent(Double.self, forKey: .halfLifeDays) { halfLifeDays = value }
         if let value = try values.decodeIfPresent(String.self, forKey: .appearance) { appearance = value }
+        // Unknown modes from a newer version fall back rather than failing the whole journal.
+        if let value = try values.decodeIfPresent(String.self, forKey: .weightTrend) { weightTrend = WeightTrendMode(rawValue: value) ?? .default }
         healthKitWeightsEnabled = try values.decodeIfPresent(Bool.self, forKey: .healthKitWeightsEnabled) ?? false
         lastHealthKitSync = try values.decodeIfPresent(Date.self, forKey: .lastHealthKitSync)
         weightsStartAtFirstDose = try values.decodeIfPresent(Bool.self, forKey: .weightsStartAtFirstDose) ?? false

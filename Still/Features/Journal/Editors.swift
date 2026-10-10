@@ -24,7 +24,7 @@ struct WeightEditor: View {
                     VStack(alignment: .leading, spacing: 16) {
                         DatePicker("Date", selection: $date)
                         if date > Date() { Label("Future entry · excluded from current trends", systemImage: "calendar").font(.caption).foregroundStyle(.secondary) }
-                        DisclosureGroup("Note") { TextField("Add a note…", text: $note, axis: .vertical).lineLimit(2...5) }
+                        DisclosureGroup("Note") { TextField("Tap to add a note…", text: $note, axis: .vertical).lineLimit(2...5) }
                     }.card()
                     if let localError { Text(localError).font(.footnote).foregroundStyle(.red) }
                     Button {
@@ -116,7 +116,7 @@ struct DoseEditor: View {
                         } else {
                             DatePicker(status == .planned ? "Planned for" : status == .skipped ? "Skipped date" : "Taken at", selection: $date)
                         }
-                        DisclosureGroup("Note") { TextField("Add a note…", text: $note, axis: .vertical).lineLimit(2...5) }
+                        DisclosureGroup("Note") { TextField("Tap to add a note…", text: $note, axis: .vertical).lineLimit(2...5) }
                     }.card()
                     if let localError { Text(localError).font(.footnote).foregroundStyle(.red) }
 

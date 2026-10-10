@@ -143,6 +143,57 @@ final class StillUITests: XCTestCase {
         app.buttons["Treatment"].tap()
         XCTAssertTrue(app.buttons["Add Vial"].waitForExistence(timeout: 5))
     }
+    @MainActor func testSettingsExplainsRowsWithInfoButtonsInsteadOfFooters() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo", "--uitest"]
+        app.launch()
+        app.buttons["Settings"].tap()
+        XCTAssertTrue(app.staticTexts["pageHeader-Settings"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Read-only. Tendr never writes to Apple Health."].exists)
+        XCTAssertFalse(app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'Removes'")).firstMatch.exists)
+
+        app.buttons["appleHealthInfo"].tap()
+        let popover = app.staticTexts["infoPopover"]
+        XCTAssertTrue(popover.waitForExistence(timeout: 5))
+        XCTAssertTrue(popover.label.contains("Read-only"))
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.08)).tap()
+        XCTAssertTrue(popover.waitForNonExistence(timeout: 5))
+
+        app.buttons["firstDoseWeightsInfo"].tap()
+        XCTAssertTrue(popover.waitForExistence(timeout: 5))
+        XCTAssertTrue(popover.label.contains("first dose"))
+    }
+    @MainActor func testWeightTrendModeAppliesToProgress() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo", "--uitest"]
+        app.launch()
+        app.buttons["Progress"].tap()
+        let caption = app.staticTexts["weightTrendCaption"]
+        for _ in 0..<3 where !caption.exists { app.swipeUp() }
+        XCTAssertEqual(caption.label, "7-day average")
+
+        app.buttons["Settings"].tap()
+        app.buttons["Weight trend, 7-day average"].tap()
+        XCTAssertTrue(app.buttons["Smoothed trend"].waitForExistence(timeout: 5))
+        for title in ["Raw readings", "14-day average", "30-day average", "Weekly average"] { XCTAssertTrue(app.buttons[title].exists, title) }
+        app.buttons["Smoothed trend"].tap()
+        XCTAssertTrue(app.buttons["Weight trend, Smoothed trend"].waitForExistence(timeout: 5))
+
+        app.buttons["Progress"].tap()
+        for _ in 0..<3 where !caption.exists { app.swipeUp() }
+        XCTAssertEqual(caption.label, "Smoothed trend")
+    }
+    @MainActor func testNotePlaceholderInvitesATap() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo", "--uitest"]
+        app.launch()
+        app.buttons["Progress"].tap()
+        app.buttons["Log weight"].tap()
+        XCTAssertTrue(app.textFields["weightAmount"].waitForExistence(timeout: 5))
+        app.buttons["Note"].tap()
+        let note = app.textFields.matching(NSPredicate(format: "placeholderValue == %@", "Tap to add a note…")).firstMatch
+        XCTAssertTrue(note.waitForExistence(timeout: 5))
+    }
     @MainActor func testWeightSavesWithKeyboardOpenAndSurvivesRelaunch() {
         let app = XCUIApplication()
         app.launchArguments = ["--uitest", "--reset-test-journal"]
@@ -302,7 +353,7 @@ final class StillUITests: XCTestCase {
         app.buttons["Progress"].tap()
         let currentWeight = app.descendants(matching: .any).matching(identifier: "currentWeightCard").firstMatch
         XCTAssertTrue(currentWeight.waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Latest recorded weight"].exists)
+        XCTAssertFalse(app.staticTexts["Latest recorded weight"].exists)
         XCTAssertTrue(app.staticTexts["195.1"].exists)
         XCTAssertTrue(app.staticTexts["WEIGHT TREND"].exists)
         XCTAssertTrue(app.staticTexts["7-day average"].exists)

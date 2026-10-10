@@ -111,18 +111,27 @@ struct SettingsView: View {
                             ForEach(accents.options, id: \.self) { Text($0).tag($0) }
                         }
                         Picker("Weight unit", selection: Binding(get: { store.journal.unit }, set: { var next = store.journal; next.unit = $0; _ = store.commit(next) })) { ForEach(WeightUnit.allCases, id: \.self) { Text($0.symbol).tag($0) } }
+                        Picker("Weight trend", selection: Binding(get: { store.journal.weightTrend }, set: { var next = store.journal; next.weightTrend = $0; _ = store.commit(next) })) {
+                            ForEach(WeightTrendMode.allCases, id: \.self) { Text($0.title).tag($0) }
+                        }.accessibilityIdentifier("weightTrendPicker")
                         if FeatureFlags.syringeUnits { Button("Dose entry") { treatment = true } }
                         Picker("Appearance", selection: Binding(get: { store.journal.appearance }, set: { var next = store.journal; next.appearance = $0; _ = store.commit(next) })) { Text("System").tag("system"); Text("Light").tag("light"); Text("Dark").tag("dark") }
                     }
                     Section {
-                        Button {
-                            Task { await store.connectHealthKit() }
-                        } label: {
-                            HStack {
-                                Label(store.journal.healthKitWeightsEnabled ? "Sync body weight" : "Connect Apple Health", systemImage: "heart.fill")
-                                Spacer()
-                                if store.journal.healthKitWeightsEnabled { Image(systemName: "arrow.clockwise").foregroundStyle(.secondary) }
-                            }
+                        HStack {
+                            Button {
+                                Task { await store.connectHealthKit() }
+                            } label: {
+                                HStack {
+                                    Label(store.journal.healthKitWeightsEnabled ? "Sync body weight" : "Connect Apple Health", systemImage: "heart.fill")
+                                    Spacer()
+                                    if store.journal.healthKitWeightsEnabled { Image(systemName: "arrow.clockwise").foregroundStyle(.secondary) }
+                                }.contentShape(Rectangle())
+                            }.buttonStyle(.borderless)
+                            InfoButton(store.journal.healthKitWeightsEnabled
+                                       ? "Tendr checks Apple Health for new weights each time you open it. Tap Sync body weight to check now. Read-only: Tendr never writes to Apple Health."
+                                       : "Read-only. Tendr reads your body weight and never writes to Apple Health.")
+                                .accessibilityIdentifier("appleHealthInfo")
                         }
                         if store.journal.healthKitWeightsEnabled {
                             LabeledContent("Status", value: store.healthKitStatus)
@@ -134,20 +143,25 @@ struct SettingsView: View {
                                 }
                             }.accessibilityIdentifier("lastHealthSync")
                         }
-                    } header: { Text("Apple Health") } footer: {
-                        Text(store.journal.healthKitWeightsEnabled ? "Tendr checks Apple Health for new weights each time you open it. You can also tap above to sync now. Read-only." : "Read-only. Tendr never writes to Apple Health.")
-                    }
+                    } header: { Text("Apple Health") }
                     Section {
-                        Toggle("Start weights at first dose", isOn: Binding(
-                            get: { store.journal.weightsStartAtFirstDose },
-                            set: { _ = store.setWeightsStartAtFirstDose($0) }
-                        )).disabled(store.firstDoseDate == nil)
+                        HStack(spacing: 2) {
+                            Text("Start weights at first dose")
+                            InfoButton(store.firstDoseDate == nil
+                                       ? "Log your first dose to use this option."
+                                       : "Removes weights from before your first dose and filters them from future Apple Health syncs. Apple Health is unchanged.")
+                                .accessibilityIdentifier("firstDoseWeightsInfo")
+                            Spacer(minLength: 8)
+                            // Only the switch is disabled, so the explanation stays reachable.
+                            Toggle("Start weights at first dose", isOn: Binding(
+                                get: { store.journal.weightsStartAtFirstDose },
+                                set: { _ = store.setWeightsStartAtFirstDose($0) }
+                            )).labelsHidden().disabled(store.firstDoseDate == nil)
+                        }
                         if let firstDoseDate = store.firstDoseDate {
                             LabeledContent("First dose") { Text(firstDoseDate, format: .dateTime.month(.abbreviated).day().year()) }
                         }
-                    } header: { Text("Weight history") } footer: {
-                        Text(store.firstDoseDate == nil ? "Log your first dose to use this option." : "Removes older weights from Tendr and filters them from future Apple Health syncs. Apple Health is unchanged.")
-                    }
+                    } header: { Text("Weight history") }
                     Section {
                         NavigationLink { PrivacyView() } label: { Label("Privacy & About", systemImage: "lock.shield") }
                     } footer: { Text("Tendr · 1.0").frame(maxWidth: .infinity).padding(.top, 12) }
@@ -194,5 +208,27 @@ struct PrivacyView: View {
             }
             if FeatureFlags.assistantPreview { Section("Assistant") { Text("The assistant is a coming-soon preview. No chat service is connected and no journal data is sent to AI.") } }
         }.navigationTitle("Privacy & About").navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// A small (i) that shows a row's explanation in a popover, instead of footer text under it.
+struct InfoButton: View {
+    let message: String
+    @State private var showing = false
+    init(_ message: String) { self.message = message }
+    var body: some View {
+        Button { showing = true } label: {
+            Image(systemName: "info.circle").font(.body).foregroundStyle(.secondary).frame(width: 32, height: 32).contentShape(Rectangle())
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel("More information")
+        .popover(isPresented: $showing, arrowEdge: .top) {
+            Text(message).font(.footnote).multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(width: 280, alignment: .leading)
+                .padding(16)
+                .presentationCompactAdaptation(.popover)
+                .accessibilityIdentifier("infoPopover")
+        }
     }
 }

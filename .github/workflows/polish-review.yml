@@ -1,0 +1,67 @@
+name: Polish review (temporary)
+
+# Review-only for the 1.0.1 polish PR: runs the affected UI tests and captures dark and light
+# screens. Remove before merging.
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    runs-on: macos-15
+    timeout-minutes: 75
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build for testing
+        run: |
+          runtime=$(xcrun simctl list runtimes --json | python3 -c 'import json,sys; r=[x for x in json.load(sys.stdin)["runtimes"] if x["platform"]=="iOS" and x["isAvailable"]]; print(r[-1]["identifier"])')
+          udid=$(xcrun simctl create "Polish" com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro-Max "$runtime")
+          echo "UDID=$udid" >> "$GITHUB_ENV"
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b >/dev/null
+          xcodebuild build-for-testing -project Still.xcodeproj -scheme Still -destination "id=$udid" \
+            -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO -quiet
+      - name: Affected UI tests
+        run: |
+          set -o pipefail
+          xcodebuild test-without-building -project Still.xcodeproj -scheme Still -destination "id=$UDID" -derivedDataPath build/DerivedData \
+            -only-testing:StillUITests/StillUITests/testSettingsExplainsRowsWithInfoButtonsInsteadOfFooters \
+            -only-testing:StillUITests/StillUITests/testWeightTrendModeAppliesToProgress \
+            -only-testing:StillUITests/StillUITests/testNotePlaceholderInvitesATap \
+            -only-testing:StillUITests/StillUITests/testWeightCardTapTargets \
+            -only-testing:StillUITests/StillUITests/testPrimaryPageHeadersShareOnePosition \
+            -only-testing:StillUITests/StillUITests/testWeightSavesWithKeyboardOpenAndSurvivesRelaunch \
+            -resultBundlePath build/polish/ui-tests.xcresult 2>&1 | grep -E "Test Case|error:|TEST (SUCC|FAIL)"
+      - name: Capture review screens (dark and light)
+        run: |
+          set -o pipefail
+          for appearance in dark light; do
+            xcrun simctl ui "$UDID" appearance "$appearance"
+            xcrun simctl status_bar "$UDID" override --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
+              --cellularMode active --cellularBars 4 --operatorName "" --batteryState discharging --batteryLevel 100
+            mkdir -p "build/polish/$appearance"
+            TEST_RUNNER_SCREENSHOT_DIR="$PWD/build/polish/$appearance" xcodebuild test-without-building \
+              -project Still.xcodeproj -scheme Still -destination "id=$UDID" -derivedDataPath build/DerivedData \
+              -only-testing:StillUITests/PolishScreenshots -resultBundlePath "build/polish/screens-$appearance.xcresult" 2>&1 \
+              | grep -E "Test Case|error:|TEST (SUCC|FAIL)"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: polish-screens
+          path: |
+            build/polish/dark/*.png
+            build/polish/light/*.png
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: polish-results
+          path: build/polish/*.xcresult
+          if-no-files-found: ignore
