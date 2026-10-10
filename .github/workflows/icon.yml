@@ -16,10 +16,10 @@ permissions:
 
 jobs:
   icon:
-    runs-on: macos-15
+    runs-on: ${{ startsWith(vars.MACOS_RUNNER, '[') && fromJSON(vars.MACOS_RUNNER) || vars.MACOS_RUNNER || 'macos-15' }}
     timeout-minutes: 15
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+      DEVELOPER_DIR: ${{ vars.DEVELOPER_DIR || '/Applications/Xcode_26.2.app/Contents/Developer' }}
     steps:
       - uses: actions/checkout@v4
       - name: Regenerate icon assets
@@ -49,10 +49,10 @@ jobs:
           test -z "$(git status --porcelain)" || { echo "::error::Run 'swift scripts/render-icon.swift' and commit the result"; exit 1; }
 
   launch-screen:
-    runs-on: macos-15
-    timeout-minutes: 40
+    runs-on: ${{ startsWith(vars.MACOS_RUNNER, '[') && fromJSON(vars.MACOS_RUNNER) || vars.MACOS_RUNNER || 'macos-15' }}
+    timeout-minutes: 30
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+      DEVELOPER_DIR: ${{ vars.DEVELOPER_DIR || '/Applications/Xcode_26.2.app/Contents/Developer' }}
     steps:
       - uses: actions/checkout@v4
       - name: Build for the simulator
@@ -68,8 +68,7 @@ jobs:
         run: |
           runtime=$(xcrun simctl list runtimes --json | python3 -c 'import json,sys; r=[x for x in json.load(sys.stdin)["runtimes"] if x["platform"]=="iOS" and x["isAvailable"]]; print(r[-1]["identifier"])')
           udid=$(xcrun simctl create "Launch" com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro-Max "$runtime")
-          xcrun simctl boot "$udid"
-          xcrun simctl bootstatus "$udid" -b >/dev/null
+          scripts/boot-simulator.sh "$udid" 300
           xcrun simctl status_bar "$udid" override --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
             --cellularMode active --cellularBars 4 --operatorName "" --batteryState discharging --batteryLevel 100
           xcrun simctl install "$udid" "$APP"

@@ -27,7 +27,7 @@ jobs:
   app-store-connect:
     needs: screenshots
     if: ${{ !cancelled() && (needs.screenshots.result == 'success' || needs.screenshots.result == 'skipped') }}
-    runs-on: macos-15
+    runs-on: ${{ startsWith(vars.MACOS_RUNNER, '[') && fromJSON(vars.MACOS_RUNNER) || vars.MACOS_RUNNER || 'macos-15' }}
     timeout-minutes: 30
     env:
       FASTLANE_SKIP_UPDATE_CHECK: '1'

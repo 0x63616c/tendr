@@ -24,8 +24,7 @@ echo "Using $runtime"
 
 udid=$(xcrun simctl create "Tendr Screenshots" "$device_type" "$runtime")
 trap 'xcrun simctl shutdown "$udid" >/dev/null 2>&1 || true; xcrun simctl delete "$udid" >/dev/null 2>&1 || true' EXIT
-xcrun simctl boot "$udid"
-xcrun simctl bootstatus "$udid" -b >/dev/null
+scripts/boot-simulator.sh "$udid" 300
 
 xcodebuild build-for-testing -project Still.xcodeproj -scheme Still \
   -destination "id=$udid" -derivedDataPath "$derived" CODE_SIGNING_ALLOWED=NO -quiet
@@ -41,6 +40,7 @@ for appearance in "${appearances[@]}"; do
   TEST_RUNNER_SCREENSHOT_DIR="$PWD/$out/$appearance" xcodebuild test-without-building \
     -project Still.xcodeproj -scheme Still -destination "id=$udid" -derivedDataPath "$derived" \
     -only-testing:StillUITests/ScreenshotTests \
+    -test-timeouts-enabled YES -default-test-execution-time-allowance 300 -maximum-test-execution-time-allowance 600 \
     -resultBundlePath "build/screenshots/ScreenshotTests-$appearance.xcresult" -quiet
 done
 
