@@ -1,0 +1,45 @@
+name: In-app purchases
+
+# Creates or updates the consumable tips in App Store Connect. Never submits anything.
+# Run it from the Actions tab, or push a tag such as iap/tips-1.
+on:
+  workflow_dispatch:
+  push:
+    tags: ['iap/**']
+
+permissions:
+  contents: read
+
+jobs:
+  tips:
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      FASTLANE_SKIP_UPDATE_CHECK: '1'
+      FASTLANE_HIDE_CHANGELOG: '1'
+      FASTLANE_SKIP_DOCS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check secrets
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+          ASC_BETA_FEEDBACK_EMAIL: ${{ secrets.ASC_BETA_FEEDBACK_EMAIL }}
+        run: |
+          missing=0
+          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_CONTENT ASC_BETA_FEEDBACK_EMAIL; do
+            [[ -n "${!name}" ]] || { echo "::error::Missing repository secret $name; see docs/RELEASE.md"; missing=1; }
+          done
+          exit "$missing"
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+      - name: Create or update the tips
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+          ASC_BETA_FEEDBACK_EMAIL: ${{ secrets.ASC_BETA_FEEDBACK_EMAIL }}
+        run: bundle exec fastlane ios tip_iaps

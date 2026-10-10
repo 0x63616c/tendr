@@ -1,3 +1,5 @@
+require "digest"
+require "net/http"
 require "shellwords"
 
 default_platform(:ios)
@@ -9,6 +11,14 @@ BETA_DESCRIPTION = "Tendr is a private, local-first companion for tracking doses
 BETA_FEEDBACK_EMAIL = ENV.fetch("ASC_BETA_FEEDBACK_EMAIL")
 METADATA_PATH = "./fastlane/metadata"
 SCREENSHOTS_PATH = "./fastlane/screenshots"
+# Consumable tips; must match Still/Features/Journal/TipJar.swift and Tendr.storekit.
+TIPS = [
+  { product_id: "com.calumwebb.still.tip.small", reference: "Tip: Coffee", name: "Coffee", description: "A small tip to support Tendr.", price: "0.99" },
+  { product_id: "com.calumwebb.still.tip.medium", reference: "Tip: Croissant", name: "Croissant", description: "A medium tip to support Tendr.", price: "2.99" },
+  { product_id: "com.calumwebb.still.tip.large", reference: "Tip: Gift", name: "Gift", description: "A generous tip to support Tendr.", price: "4.99" }
+].freeze
+TIP_REVIEW_NOTE = "An optional tip from Settings > Support Tendr. It unlocks nothing; the app is fully free."
+TIP_REVIEW_SCREENSHOT = File.expand_path("iap/tip-sheet-review.png", __dir__)
 
 private_lane :connect_api_key do
   key_path = ENV["ASC_KEY_PATH"]
@@ -294,6 +304,35 @@ platform :ios do
   end
 
   desc "Upload the listing and screenshots, set Free pricing and attach the latest build. Stops before Submit for Review"
+  desc "Create or update the three consumable tips (name, price, availability, review screenshot). Never submits"
+  lane :tip_iaps do
+    connect_api_key
+    app = app_store_app
+    asc = Spaceship::ConnectAPI.client.tunes_request_client
+    territories = asc_all(asc, "v1/territories", { "limit" => 200 }).map { |territory| territory["id"] }
+    existing = asc_all(asc, "v1/apps/#{app.id}/inAppPurchasesV2", { "limit" => 200 })
+    TIPS.each do |tip|
+      iap = existing.find { |item| item.dig("attributes", "productId") == tip[:product_id] }
+      if iap
+        UI.message("#{tip[:product_id]} exists (#{iap.dig('attributes', 'state')})")
+      else
+        iap = asc.post("v2/inAppPurchases", { data: {
+          type: "inAppPurchases",
+          attributes: { name: tip[:reference], productId: tip[:product_id], inAppPurchaseType: "CONSUMABLE", reviewNote: TIP_REVIEW_NOTE, familySharable: false },
+          relationships: { app: { data: { type: "apps", id: app.id } } }
+        } }).body["data"]
+        UI.success("Created #{tip[:product_id]}")
+      end
+      id = iap["id"]
+      tip_localization(asc, id, tip)
+      tip_price(asc, id, tip)
+      tip_availability(asc, id, territories)
+      tip_review_screenshot(asc, id)
+      state = asc.get("v2/inAppPurchases/#{id}").body.dig("data", "attributes", "state")
+      UI.success("#{tip[:product_id]}: #{tip[:name]} $#{tip[:price]}, state #{state}")
+    end
+  end
+
   lane :prepare_review do |options|
     api_key = connect_api_key
     metadata(api_key: api_key, version: options[:version], skip_screenshots: options[:skip_screenshots])
@@ -347,4 +386,91 @@ end
 def editable_app_store_version(app)
   app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS) ||
     UI.user_error!("No editable App Store version. Create one in App Store Connect or run the metadata lane first")
+end
+
+# Follows `links.next` so long lists (territories, price points) are complete.
+def asc_all(asc, path, params = nil)
+  response = asc.get(path, params)
+  items = response.body["data"]
+  while (next_url = response.body.dig("links", "next"))
+    response = asc.get(next_url)
+    items += response.body["data"]
+  end
+  items
+end
+
+def tip_localization(asc, id, tip)
+  attributes = { name: tip[:name], description: tip[:description] }
+  existing = asc_all(asc, "v2/inAppPurchases/#{id}/inAppPurchaseLocalizations").find { |item| item.dig("attributes", "locale") == "en-US" }
+  if existing
+    asc.patch("v1/inAppPurchaseLocalizations/#{existing['id']}", { data: { type: "inAppPurchaseLocalizations", id: existing["id"], attributes: attributes } })
+  else
+    asc.post("v1/inAppPurchaseLocalizations", { data: {
+      type: "inAppPurchaseLocalizations",
+      attributes: attributes.merge(locale: "en-US"),
+      relationships: { inAppPurchaseV2: { data: { type: "inAppPurchases", id: id } } }
+    } })
+  end
+end
+
+# POST replaces the schedule, so rerunning is safe. Other territories follow the USA price.
+def tip_price(asc, id, tip)
+  points = asc_all(asc, "v2/inAppPurchases/#{id}/pricePoints", { "filter[territory]" => "USA", "limit" => 200 })
+  point = points.find { |item| format("%.2f", item.dig("attributes", "customerPrice").to_f) == tip[:price] }
+  UI.user_error!("No USA price point at $#{tip[:price]} for #{tip[:product_id]}") unless point
+  asc.post("v1/inAppPurchasePriceSchedules", {
+    data: {
+      type: "inAppPurchasePriceSchedules",
+      relationships: {
+        inAppPurchase: { data: { type: "inAppPurchases", id: id } },
+        baseTerritory: { data: { type: "territories", id: "USA" } },
+        manualPrices: { data: [{ type: "inAppPurchasePrices", id: "${price}" }] }
+      }
+    },
+    included: [{
+      type: "inAppPurchasePrices", id: "${price}", attributes: { startDate: nil },
+      relationships: { inAppPurchasePricePoint: { data: { type: "inAppPurchasePricePoints", id: point["id"] } } }
+    }]
+  })
+end
+
+def tip_availability(asc, id, territories)
+  asc.get("v2/inAppPurchases/#{id}/inAppPurchaseAvailability")
+rescue StandardError
+  asc.post("v1/inAppPurchaseAvailabilities", { data: {
+    type: "inAppPurchaseAvailabilities",
+    attributes: { availableInNewTerritories: true },
+    relationships: {
+      inAppPurchase: { data: { type: "inAppPurchases", id: id } },
+      availableTerritories: { data: territories.map { |territory| { type: "territories", id: territory } } }
+    }
+  } })
+end
+
+def tip_review_screenshot(asc, id)
+  existing = begin
+    asc.get("v2/inAppPurchases/#{id}/appStoreReviewScreenshot").body["data"]
+  rescue StandardError
+    nil
+  end
+  return if existing && existing.dig("attributes", "assetDeliveryState", "state") == "COMPLETE"
+
+  bytes = File.binread(TIP_REVIEW_SCREENSHOT)
+  shot = asc.post("v1/inAppPurchaseAppStoreReviewScreenshots", { data: {
+    type: "inAppPurchaseAppStoreReviewScreenshots",
+    attributes: { fileName: File.basename(TIP_REVIEW_SCREENSHOT), fileSize: bytes.bytesize },
+    relationships: { inAppPurchaseV2: { data: { type: "inAppPurchases", id: id } } }
+  } }).body["data"]
+  shot.dig("attributes", "uploadOperations").each do |operation|
+    uri = URI(operation["url"])
+    request = Net::HTTPGenericRequest.new(operation["method"], true, true, uri.request_uri)
+    operation["requestHeaders"].each { |header| request[header["name"]] = header["value"] }
+    request.body = bytes.byteslice(operation["offset"], operation["length"])
+    response = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(request) }
+    UI.user_error!("Review screenshot upload failed: HTTP #{response.code}") unless response.is_a?(Net::HTTPSuccess)
+  end
+  asc.patch("v1/inAppPurchaseAppStoreReviewScreenshots/#{shot['id']}", { data: {
+    type: "inAppPurchaseAppStoreReviewScreenshots", id: shot["id"],
+    attributes: { uploaded: true, sourceFileChecksum: Digest::MD5.hexdigest(bytes) }
+  } })
 end
