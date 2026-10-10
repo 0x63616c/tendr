@@ -59,7 +59,12 @@ struct MedicationCard: View {
         .accessibilityAddTraits(expanded ? [] : .isButton)
         .accessibilityAction(named: "View details") { if !expanded { detail = true } }
         .accessibilityIdentifier(expanded ? "medicationDetailCard" : "medicationCard")
-        .onAppear { if cachedPlot == nil { cachedPlot = plot } }
+        .onAppear {
+            // Every visit starts live at now, rather than where the graph was last scrubbed.
+            selected = nil
+            now = Date()
+            if cachedPlot == nil { cachedPlot = plot }
+        }
         .onChange(of: now) { _, _ in cachedPlot = makePlot() }
         .onChange(of: store.journal) { _, _ in cachedPlot = makePlot() }
         .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { now = $0 }
@@ -220,6 +225,7 @@ struct MedicationAnalytics: View {
             }.frame(maxWidth: .infinity).card()
         }
         .onChange(of: days) { _, _ in selected = nil }
+        .onAppear { selected = nil; now = Date() }
         .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { now = $0 }
     }
     func value(_ title: String, _ amount: Double, unit: String) -> some View {
